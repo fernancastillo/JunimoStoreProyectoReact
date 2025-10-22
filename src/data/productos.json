@@ -5,7 +5,8 @@
     "nombre": "Llavero Stardew Valley",
     "descripcion": "Llavero temático de Stardew Valley, perfecto para llevar contigo a todas partes.",
     "precio": 5990,
-    "stock": 10,
+    "stock": 76,
+    "stock_critico": 30,
     "imagen": "../../src/assets/tienda/llavero-stardew.webp"
   },
   {
@@ -14,7 +15,8 @@
     "nombre": "Taza Stardew Valley",
     "descripcion": "Taza de cerámica con diseño exclusivo de Stardew Valley, ideal para tu bebida favorita.",
     "precio": 7990,
-    "stock": 10,
+    "stock": 48,
+    "stock_critico": 20,
     "imagen": "../../src/assets/tienda/taza-stardew-valley.webp"
   },
   {
@@ -23,7 +25,8 @@
     "nombre": "Pins Stardew Valley",
     "descripcion": "Set de pins coleccionables con personajes y elementos de Stardew Valley.",
     "precio": 2500,
-    "stock": 10,
+    "stock": 162,
+    "stock_critico": 100,
     "imagen": "../../src/assets/tienda/pins-stardew-valley.webp"
   },
   {
@@ -32,7 +35,8 @@
     "nombre": "Póster Stardew Valley (Edición Granja)",
     "descripcion": "Póster decorativo de alta calidad con diseño inspirado en la granja de Stardew Valley.",
     "precio": 14990,
-    "stock": 10,
+    "stock": 9,
+    "stock_critico": 10,
     "imagen": "../../src/assets/tienda/poster-granja-stardew.avif"
   },
   {
@@ -41,7 +45,8 @@
     "nombre": "Almohada Pollo De Stardew Valley",
     "descripcion": "Almohada decorativa con forma del icónico pollo de Stardew Valley.",
     "precio": 15990,
-    "stock": 10,
+    "stock": 29,
+    "stock_critico": 30,
     "imagen": "../../src/assets/tienda/almohada-pollo-stardew.png"
   },
   {
@@ -50,7 +55,8 @@
     "nombre": "Guía Ilustrada De Cultivos",
     "descripcion": "Guía impresa a todo color con ilustraciones y consejos para cultivos en Stardew Valley.",
     "precio": 24990,
-    "stock": 10,
+    "stock": 63,
+    "stock_critico": 20,
     "imagen": "../../src/assets/tienda/guia-cultivos-stardew.webp"
   },
   {
@@ -59,7 +65,8 @@
     "nombre": "Stardew Valley Juego De Mesa",
     "descripcion": "Versión física del juego de mesa basado en el mundo de Stardew Valley.",
     "precio": 29990,
-    "stock": 10,
+    "stock": 55,
+    "stock_critico": 30,
     "imagen": "../../src/assets/tienda/juego-mesa-stardew.webp"
   },
   {
@@ -68,7 +75,8 @@
     "nombre": "Pack De Texturas HD",
     "descripcion": "Paquete digital de mods para mejorar las texturas del juego a alta definición.",
     "precio": 9990,
-    "stock": 10,
+    "stock": 241,
+    "stock_critico": 100,
     "imagen": "../../src/assets/tienda/pack-texturas-hd.webp"
   },
   {
@@ -77,7 +85,8 @@
     "nombre": "Peluche De Krobus",
     "descripcion": "Suave y adorable peluche de Krobus, ideal para fans y coleccionistas.",
     "precio": 19990,
-    "stock": 10,
+    "stock": 3,
+    "stock_critico": 20,
     "imagen": "../../src/assets/tienda/peluche-krobus.webp"
   },
   {
@@ -86,7 +95,8 @@
     "nombre": "Polera Stardew Valley Personalizada (Edición Limitada)",
     "descripcion": "Polera de edición limitada con diseño personalizado inspirado en Stardew Valley.",
     "precio": 11990,
-    "stock": 10,
+    "stock": 12,
+    "stock_critico": 20,
     "imagen": "../../src/assets/tienda/polera-stardew-personalizada.webp"
   }
 ]

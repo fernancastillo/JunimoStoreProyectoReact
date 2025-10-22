@@ -9,27 +9,28 @@ export const authService = {
   // Autenticar usuario desde el JSON
   login: async (email, password) => {
     try {
-      // Buscar usuario en el JSON importado
-      const user = usuariosData.usuarios.find(u => 
-        u.correo === email && u.contrasena === password
+      console.log('Datos de usuarios cargados:', usuariosData); 
+      
+      const user = usuariosData.find(u => 
+        u.correo === email && u.contrasenha === password 
       );
       
       if (user) {
         const userData = {
-          id: user.id,
+          id: user.run, 
           nombre: user.nombre,
           email: user.correo,
-          type: user.categoria,
+          type: user.tipo, 
           loginTime: new Date().toISOString()
         };
         
         saveLocalstorage(AUTH_KEY, userData);
-        saveLocalstorage(USER_TYPE_KEY, user.categoria);
+        saveLocalstorage(USER_TYPE_KEY, user.tipo); 
         
         return {
           success: true,
           user: userData,
-          redirectTo: user.categoria === 'Admin' ? '/admin/dashboard' : '/index'
+          redirectTo: user.tipo === 'Admin' ? '/admin/dashboard' : '/index' 
         };
       }
       
