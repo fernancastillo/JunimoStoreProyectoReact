@@ -1,3 +1,4 @@
+// App.jsx - importación corregida
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/tienda/Navbar'
 import Index from './pages/tienda/Index'
@@ -8,6 +9,7 @@ import Productos from './pages/admin/Productos'
 import Usuarios from './pages/admin/Usuarios'
 import Perfil from './pages/admin/Perfil'
 import AdminSidebar, { AdminMobileNavbar } from './components/admin/AdminSidebar'
+import AdminProtectedRoute from './components/admin/AdminProtectedRoute' 
 
 function App() {
   return (
@@ -15,34 +17,34 @@ function App() {
       <Routes>
         {/* RUTAS DE ADMIN */}
         <Route path="/admin/*" element={
-          <div className="container-fluid p-0">
-            {/* Navbar móvil */}
-            <AdminMobileNavbar />
-            
-            <div className="row g-0">
-              <div className="col-lg-1 col-md-2 d-none d-md-block min-vh-100">
-                <AdminSidebar />
-              </div>
+          <AdminProtectedRoute>
+            <div className="container-fluid p-0">
+              <AdminMobileNavbar />
               
-              {/* Contenido principal */}
-              <div className="col-lg-11 col-md-10 ms-auto">
-                {/* Espacio para el navbar fijo en móviles */}
-                <div className="d-md-none" style={{ height: '70px' }}></div>
-                <div className="container-fluid mt-4">
-                  <Routes>
-                    <Route path='/dashboard' element={<Dashboard/>} />
-                    <Route path='/ordenes' element={<Ordenes/>} />
-                    <Route path='/productos' element={<Productos/>} />
-                    <Route path='/usuarios' element={<Usuarios/>} />
-                    <Route path='/perfil' element={<Perfil/>} />
-                  </Routes>
+              <div className="row g-0">
+                <div className="col-lg-1 col-md-2 d-none d-md-block min-vh-100">
+                  <AdminSidebar />
+                </div>
+                
+                <div className="col-lg-11 col-md-10 ms-auto">
+                  <div className="d-md-none" style={{ height: '70px' }}></div>
+                  <div className="container-fluid mt-4">
+                    <Routes>
+                      <Route path='/dashboard' element={<Dashboard/>} />
+                      <Route path='/ordenes' element={<Ordenes/>} />
+                      <Route path='/productos' element={<Productos/>} />
+                      <Route path='/usuarios' element={<Usuarios/>} />
+                      <Route path='/perfil' element={<Perfil/>} />
+                      <Route path='/' element={<Navigate to="/admin/dashboard" replace />} />
+                    </Routes>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </AdminProtectedRoute>
         } />
         
-        {/* ✅ RUTAS PÚBLICAS - CON NAVBAR EN TOP */}
+        {/* RUTAS PÚBLICAS */}
         <Route path="/*" element={
           <div className="d-flex flex-column min-vh-100">
             <Navbar />
