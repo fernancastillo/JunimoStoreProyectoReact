@@ -12,14 +12,6 @@ const AdminSidebar = () => {
     { path: '/admin/perfil', icon: 'bi bi-person', label: 'Perfil' },
   ];
 
-  // Estilo para hover
-  const linkHoverStyle = {
-    backgroundColor: '#87CEEB',
-    color: '#000000',
-    borderRadius: '5px',
-    transition: 'all 0.3s ease'
-  };
-
   return (
     <div className="min-vh-100 w-100" style={{ backgroundColor: '#dedd8ff5' }}>
       <div className="sidebar-sticky">          
@@ -33,26 +25,11 @@ const AdminSidebar = () => {
             <li key={item.path} className="nav-item mb-1">
               <Link 
                 to={item.path} 
-                className={`nav-link text-dark d-flex flex-column align-items-center p-2 ${
+                className={`admin-sidebar-link nav-link text-dark d-flex flex-column align-items-center p-2 ${
                   location.pathname === item.path ? 'active fw-bold' : ''
                 }`}
                 style={{ 
                   backgroundColor: location.pathname === item.path ? '#c9c87ae5' : 'transparent',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseEnter={(e) => {
-                  if (location.pathname !== item.path) {
-                    e.target.style.backgroundColor = '#87CEEB';
-                    e.target.style.color = '#000000';
-                    e.target.style.borderRadius = '5px';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (location.pathname !== item.path) {
-                    e.target.style.backgroundColor = location.pathname === item.path ? '#c9c87ae5' : 'transparent';
-                    e.target.style.color = '#000000';
-                    e.target.style.borderRadius = '0px';
-                  }
                 }}
                 title={item.label}
               >
@@ -65,18 +42,8 @@ const AdminSidebar = () => {
           <li className="nav-item mt-3 pt-3 border-top border-dark">
             <Link 
               to="/index" 
-              className="nav-link text-dark d-flex flex-column align-items-center p-2 fw-bold"
-              style={{ transition: 'all 0.3s ease' }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#87CEEB';
-                e.target.style.color = '#000000';
-                e.target.style.borderRadius = '5px';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'transparent';
-                e.target.style.color = '#000000';
-                e.target.style.borderRadius = '0px';
-              }}
+              className="admin-sidebar-link nav-link text-dark d-flex flex-column align-items-center p-2 fw-bold"
+              style={{ backgroundColor: 'transparent' }}
               title="Volver a Tienda"
             >
               <i className="bi bi-shop fs-5"></i>
@@ -103,13 +70,6 @@ export const AdminMobileNavbar = () => {
     { path: '/admin/perfil', icon: 'bi bi-person', label: 'Perfil' },
   ];
 
-  // Estilo para hover en móvil
-  const mobileLinkHoverStyle = {
-    backgroundColor: '#87CEEB',
-    color: '#000000',
-    transition: 'all 0.3s ease'
-  };
-
   // ✅ Cerrar menú al hacer clic fuera de él
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -129,7 +89,7 @@ export const AdminMobileNavbar = () => {
 
   return (
     <div ref={navbarRef}>
-      {/* ✅ Navbar móvil - CON COLOR AMARILLO MOSTAZA */}
+      {/* ✅ Navbar móvil */}
       <nav className="navbar navbar-dark d-md-none fixed-top" style={{ 
         backgroundColor: '#dedd8ff5',
         minHeight: '56px'
@@ -137,33 +97,24 @@ export const AdminMobileNavbar = () => {
         <div className="container-fluid">
           <span className="navbar-brand text-dark fw-bold">Panel Admin</span>
           <button 
-            className="navbar-toggler border-dark" 
+            className="navbar-toggler border-dark btn-hover-effect"
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-expanded={isMobileMenuOpen}
             aria-label="Toggle navigation"
-            style={{ transition: 'all 0.3s ease' }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#87CEEB';
-              e.target.style.borderColor = '#87CEEB';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-              e.target.style.borderColor = '#000000';
-            }}
           >
             <span className="navbar-toggler-icon"></span>
           </button>
         </div>
       </nav>
 
-      {/* ✅ Menú móvil desplegable - POSICIONADO CORRECTAMENTE */}
+      {/* ✅ Menú móvil desplegable */}
       {isMobileMenuOpen && (
         <div 
           className="d-md-none" 
           style={{ 
             position: 'fixed', 
-            top: '56px', // ✅ Justo debajo del navbar
+            top: '56px',
             left: 0, 
             right: 0, 
             zIndex: 1050,
@@ -177,28 +128,12 @@ export const AdminMobileNavbar = () => {
               <li key={item.path} className="nav-item mb-2">
                 <Link 
                   to={item.path} 
-                  className={`nav-link text-dark d-flex align-items-center py-3 ${
+                  className={`admin-sidebar-link nav-link text-dark d-flex align-items-center py-3 ${
                     location.pathname === item.path ? 'active fw-bold' : ''
                   }`}
                   style={{ 
                     backgroundColor: location.pathname === item.path ? '#c9c87ae5' : 'transparent',
-                    borderRadius: '8px',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (location.pathname !== item.path) {
-                      e.target.style.backgroundColor = '#87CEEB';
-                      e.target.style.color = '#000000';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (location.pathname !== item.path) {
-                      e.target.style.backgroundColor = 'transparent';
-                      e.target.style.color = '#000000';
-                    } else {
-                      e.target.style.backgroundColor = '#c9c87ae5';
-                      e.target.style.color = '#000000';
-                    }
+                    borderRadius: '8px'
                   }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -211,18 +146,10 @@ export const AdminMobileNavbar = () => {
             <li className="nav-item mt-3 pt-3 border-top border-dark">
               <Link 
                 to="/index" 
-                className="nav-link text-dark d-flex align-items-center py-3 fw-bold"
+                className="admin-sidebar-link nav-link text-dark d-flex align-items-center py-3 fw-bold"
                 style={{ 
                   borderRadius: '8px',
-                  transition: 'all 0.3s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#87CEEB';
-                  e.target.style.color = '#000000';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#000000';
+                  backgroundColor: 'transparent'
                 }}
                 onClick={() => setIsMobileMenuOpen(false)}
               >

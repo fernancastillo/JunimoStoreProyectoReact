@@ -1,0 +1,32 @@
+/* Estilos globales para hover effects */
+.navbar .nav-link {
+  transition: all 0.3s ease !important;
+}
+
+.navbar .nav-link:hover {
+  background-color: #87CEEB !important;
+  color: #000000 !important;
+  border-radius: 5px !important;
+}
+
+/* Para el sidebar del admin */
+.admin-sidebar-link {
+  transition: all 0.3s ease !important;
+}
+
+.admin-sidebar-link:hover {
+  background-color: #87CEEB !important;
+  color: #000000 !important;
+  border-radius: 5px !important;
+}
+
+/* Para botones */
+.btn-hover-effect {
+  transition: all 0.3s ease !important;
+}
+
+.btn-hover-effect:hover {
+  background-color: #87CEEB !important;
+  color: #000000 !important;
+  border-color: #87CEEB !important;
+}
