@@ -1,4 +1,3 @@
-// utils/admin/routeProtection.js
 import { authService } from '../tienda/auth';
 
 /**

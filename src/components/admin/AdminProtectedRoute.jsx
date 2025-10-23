@@ -1,4 +1,3 @@
-// components/admin/AdminProtectedRoute.jsx
 import { Navigate, useLocation } from 'react-router-dom';
 import { canAccessAdmin, getRedirectRoute } from '../../utils/admin/routeProtection';
 
