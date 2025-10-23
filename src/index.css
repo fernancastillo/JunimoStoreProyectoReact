@@ -30,3 +30,13 @@
   color: #000000 !important;
   border-color: #87CEEB !important;
 }
+
+/* Estilo para el botón de cerrar sesión */
+.logout-button:hover {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
+
+.admin-sidebar-link:hover .bi-box-arrow-right {
+  color: #dc3545 !important;
+}

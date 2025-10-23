@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
+import { authService } from '../../utils/tienda/auth';
 
 const AdminSidebar = () => {
   const location = useLocation();
@@ -12,12 +13,22 @@ const AdminSidebar = () => {
     { path: '/admin/perfil', icon: 'bi bi-person', label: 'Perfil' },
   ];
 
+  // ✅ Función para cerrar sesión
+  const handleLogout = () => {
+    if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+      authService.logout();
+    }
+  };
+
   return (
     <div className="min-vh-100 w-100" style={{ backgroundColor: '#dedd8ff5' }}>
       <div className="sidebar-sticky">          
         {/* Header compacto */}
         <div className="p-2 text-center" style={{ backgroundColor: '#c9c87ae5' }}>
           <h6 className="mb-0 small text-dark">Admin</h6>
+          <small className="text-muted">
+            {authService.getCurrentUser()?.nombre || 'Administrador'}
+          </small>
         </div>
         
         <ul className="nav nav-pills flex-column p-2">
@@ -39,16 +50,20 @@ const AdminSidebar = () => {
             </li>
           ))}
           
+          {/* ✅ BOTÓN DE CERRAR SESIÓN */}
           <li className="nav-item mt-3 pt-3 border-top border-dark">
-            <Link 
-              to="/index" 
-              className="admin-sidebar-link nav-link text-dark d-flex flex-column align-items-center p-2 fw-bold"
-              style={{ backgroundColor: 'transparent' }}
-              title="Volver a Tienda"
+            <button 
+              onClick={handleLogout}
+              className="admin-sidebar-link nav-link text-dark d-flex flex-column align-items-center p-2 fw-bold w-100 border-0"
+              style={{ 
+                backgroundColor: 'transparent',
+                cursor: 'pointer'
+              }}
+              title="Cerrar Sesión"
             >
-              <i className="bi bi-shop fs-5"></i>
-              <small className="mt-1" style={{ fontSize: '0.7rem' }}>Tienda</small>
-            </Link>
+              <i className="bi bi-box-arrow-right fs-5"></i>
+              <small className="mt-1" style={{ fontSize: '0.7rem' }}>Cerrar Sesión</small>
+            </button>
           </li>
         </ul>
       </div>
@@ -69,6 +84,13 @@ export const AdminMobileNavbar = () => {
     { path: '/admin/usuarios', icon: 'bi bi-people', label: 'Usuarios' },
     { path: '/admin/perfil', icon: 'bi bi-person', label: 'Perfil' },
   ];
+
+  // ✅ Función para cerrar sesión
+  const handleLogout = () => {
+    if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+      authService.logout();
+    }
+  };
 
   // ✅ Cerrar menú al hacer clic fuera de él
   useEffect(() => {
@@ -143,19 +165,23 @@ export const AdminMobileNavbar = () => {
               </li>
             ))}
             
+            {/* ✅ BOTÓN DE CERRAR SESIÓN EN MÓVIL */}
             <li className="nav-item mt-3 pt-3 border-top border-dark">
-              <Link 
-                to="/index" 
-                className="admin-sidebar-link nav-link text-dark d-flex align-items-center py-3 fw-bold"
+              <button 
+                onClick={() => {
+                  handleLogout();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="admin-sidebar-link nav-link text-dark d-flex align-items-center py-3 fw-bold w-100 border-0"
                 style={{ 
                   borderRadius: '8px',
-                  backgroundColor: 'transparent'
+                  backgroundColor: 'transparent',
+                  cursor: 'pointer'
                 }}
-                onClick={() => setIsMobileMenuOpen(false)}
               >
-                <i className="bi bi-shop me-3 fs-5"></i>
-                <span className="fs-6">Volver a Tienda</span>
-              </Link>
+                <i className="bi bi-box-arrow-right me-3 fs-5"></i>
+                <span className="fs-6">Cerrar Sesión</span>
+              </button>
             </li>
           </ul>
         </div>

@@ -47,10 +47,18 @@ export const authService = {
     }
   },
 
-  // Cerrar sesión
+  // Cerrar sesión 
   logout: () => {
     deleteFromLocalstorage(AUTH_KEY);
     deleteFromLocalstorage(USER_TYPE_KEY);
+    // Limpiar cualquier otra data de sesión si existe
+    localStorage.removeItem('auth_user');
+    localStorage.removeItem('user_type');
+    
+    console.log('Sesión cerrada correctamente');
+    
+    // Redirigir al inicio
+    window.location.href = '/index';
   },
 
   // Verificar si el usuario está autenticado
