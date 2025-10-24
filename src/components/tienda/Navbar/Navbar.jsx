@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Navbar.css';
 import junimoLogo from '../../../assets/tienda/junimoss.png';
-import loginIcon from '../../../assets/tienda/registrarse.png'; // Nombre corregido
+import loginIcon from '../../../assets/tienda/registrarse.png';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
