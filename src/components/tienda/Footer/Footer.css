@@ -1,0 +1,121 @@
+
+
+/* Footer */
+.site-footer {
+    width: 100%;
+    background-color: #dedd8ff5;
+    color: #000000;
+    padding: 40px 0 20px 0;
+    margin-top: auto;
+  }
+  
+  /* Ajustes generales para React - aplicar en tu App.css o layout principal */
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .app-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .main-content {
+    flex: 1;
+  }
+  
+  .footer-sections {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  
+  /* Parte de descripción de la tienda y enlaces del menu */
+  .footer-section {
+    flex: 1 1 250px; 
+    margin-bottom: 30px;
+    font-family: 'Indie Flower', cursive;
+  }
+  
+  /* Espaciado adicional para la sección de bienvenida */
+  .welcome-section {
+    padding-right: 30px;
+  }
+  
+  /* Espaciado para la sección del menú */
+  .menu-section {
+    padding: 0 20px;
+  }
+  
+  /* Parte de titulo de descripción, menu, siguenos, contactanos */
+  .footer-section h5 {
+    color: #000000;
+    font-family: 'Lato', cursive;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+  }
+  
+  .footer-section ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .footer-section ul li {
+    margin-bottom: 12px;
+  }
+  
+  .footer-section ul li a {
+    color: #000000;
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  
+  .footer-section ul li a:hover {
+    color: #FFFFFF;
+  }
+  
+  .social-icons a {
+    color: #000000;
+    font-size: 1.8rem;
+    margin-right: 20px;
+    transition: color 0.3s;
+  }
+  
+  .social-icons a:hover {
+    color: #FFD700;
+    transform: scale(1.1);
+  }
+  
+  /* Parte de los derechos reservados */
+  .footer-bottom {
+    font-family: 'Indie Flower', cursive;
+    text-align: center;
+    padding-top: 25px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    color: #000000;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 25px 20px 0;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .footer-sections {
+      flex-direction: column;
+    }
+    
+    .welcome-section,
+    .menu-section {
+      padding: 0;
+    }
+    
+    .footer-section {
+      flex: 1 1 100%;
+    }
+  }

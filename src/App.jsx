@@ -1,6 +1,7 @@
-// App.jsx - importación corregida
+
 import { Routes, Route, Navigate } from 'react-router-dom'
-import Navbar from './components/tienda/Navbar'
+import Navbar from './components/tienda/Navbar/Navbar'
+import Footer from './components/tienda/Footer/Footer'
 import Index from './pages/tienda/Index'
 import Login from './pages/tienda/Login'
 import Dashboard from './pages/admin/Dashboard'
@@ -63,6 +64,7 @@ function App() {
                 </Routes>
               </div>
             </main>
+              <Footer />
           </div>
         } />
       </Routes>
