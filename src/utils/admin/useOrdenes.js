@@ -1,4 +1,4 @@
-// src/utils/admin/useOrdenes.js - ARCHIVO NUEVO
+// src/utils/admin/useOrdenes.js - VERIFICAR que handleDelete esté definido
 import { useState, useEffect } from 'react';
 import { ordenService } from './ordenService';
 import { calcularEstadisticasOrdenes, aplicarFiltrosOrdenes } from './ordenStats';
@@ -16,20 +16,15 @@ export const useOrdenes = () => {
     fecha: ''
   });
 
-  // Cargar órdenes al inicializar
   useEffect(() => {
     loadOrdenes();
   }, []);
 
-  // Aplicar filtros cuando cambien las órdenes o los filtros
   useEffect(() => {
     const filtered = aplicarFiltrosOrdenes(ordenes, filtros);
     setOrdenesFiltradas(filtered);
   }, [ordenes, filtros]);
 
-  /**
-   * Carga todas las órdenes desde el servicio
-   */
   const loadOrdenes = async () => {
     try {
       setLoading(true);
@@ -37,44 +32,43 @@ export const useOrdenes = () => {
       setOrdenes(data);
     } catch (error) {
       console.error('Error cargando órdenes:', error);
-      // Podrías agregar un estado de error aquí si lo necesitas
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   * Abre el modal para ver detalles de una orden
-   */
   const handleEdit = (orden) => {
     setEditingOrden(orden);
     setShowModal(true);
   };
 
-  /**
-   * Actualiza el estado de envío de una orden
-   */
   const handleUpdateEstado = async (numeroOrden, nuevoEstado) => {
     try {
       await ordenService.updateEstadoOrden(numeroOrden, nuevoEstado);
-      await loadOrdenes(); // Recargar para obtener datos actualizados
+      await loadOrdenes();
     } catch (error) {
       console.error('Error actualizando estado:', error);
-      throw error; // Propagar el error para manejarlo en el componente
+      throw error;
     }
   };
 
-  /**
-   * Cierra el modal de detalles
-   */
+  // ✅ Asegurar que esta función esté definida
+  const handleDelete = async (numeroOrden) => {
+    try {
+      await ordenService.deleteOrden(numeroOrden);
+      await loadOrdenes(); // Recargar la lista
+      return { success: true };
+    } catch (error) {
+      console.error('Error eliminando orden:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingOrden(null);
   };
 
-  /**
-   * Maneja cambios en los filtros de búsqueda
-   */
   const handleFiltroChange = (e) => {
     const { name, value } = e.target;
     setFiltros(prev => ({
@@ -83,9 +77,6 @@ export const useOrdenes = () => {
     }));
   };
 
-  /**
-   * Limpia todos los filtros aplicados
-   */
   const handleLimpiarFiltros = () => {
     setFiltros({
       numeroOrden: '',
@@ -95,14 +86,10 @@ export const useOrdenes = () => {
     });
   };
 
-  /**
-   * Recarga los datos (útil para sincronizar después de cambios externos)
-   */
   const refreshData = () => {
     loadOrdenes();
   };
 
-  // Calcular estadísticas en tiempo real
   const estadisticas = calcularEstadisticasOrdenes(ordenes);
 
   return {
@@ -115,17 +102,19 @@ export const useOrdenes = () => {
     filtros,
     estadisticas,
     
-    // Acciones
+    // Acciones - ✅ Asegurar que handleDelete esté en el return
     handleEdit,
     handleUpdateEstado,
+    handleDelete, // ✅ ESTA LÍNEA DEBE ESTAR PRESENTE
     handleCloseModal,
     handleFiltroChange,
     handleLimpiarFiltros,
     refreshData,
     
-    // Aliases para consistencia con useProductos
+    // Aliases para consistencia
     onEdit: handleEdit,
     onUpdate: handleUpdateEstado,
+    onDelete: handleDelete, // ✅ Y este alias también
     onCloseModal: handleCloseModal
   };
 };

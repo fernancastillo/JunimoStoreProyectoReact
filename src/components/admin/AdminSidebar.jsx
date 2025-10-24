@@ -1,3 +1,4 @@
+// src/components/admin/AdminSidebar.jsx
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { authService } from '../../utils/tienda/auth';
@@ -21,51 +22,65 @@ const AdminSidebar = () => {
   };
 
   return (
-    <div className="min-vh-100 w-100" style={{ backgroundColor: '#dedd8ff5' }}>
-      <div className="sidebar-sticky">          
+    <div 
+      className="position-fixed start-0 top-0 h-100" 
+      style={{ 
+        backgroundColor: '#dedd8ff5',
+        width: 'inherit', // Mantener el ancho original
+        zIndex: 1000,
+        overflowY: 'auto' // Permitir scroll si el contenido es muy largo
+      }}
+    >
+      <div className="sidebar-sticky h-100 d-flex flex-column">          
         {/* Header compacto */}
-        <div className="p-2 text-center" style={{ backgroundColor: '#c9c87ae5' }}>
+        <div 
+          className="p-2 text-center flex-shrink-0" 
+          style={{ backgroundColor: '#c9c87ae5' }}
+        >
           <h6 className="mb-0 small text-dark">Admin</h6>
           <small className="text-muted">
             {authService.getCurrentUser()?.nombre || 'Administrador'}
           </small>
         </div>
         
-        <ul className="nav nav-pills flex-column p-2">
-          {menuItems.map((item) => (
-            <li key={item.path} className="nav-item mb-1">
-              <Link 
-                to={item.path} 
-                className={`admin-sidebar-link nav-link text-dark d-flex flex-column align-items-center p-2 ${
-                  location.pathname === item.path ? 'active fw-bold' : ''
-                }`}
+        {/* Menú - ocupa el espacio restante */}
+        <div className="flex-grow-1 overflow-auto">
+          <ul className="nav nav-pills flex-column p-2 m-0">
+            {menuItems.map((item) => (
+              <li key={item.path} className="nav-item mb-1">
+                <Link 
+                  to={item.path} 
+                  className={`admin-sidebar-link nav-link text-dark d-flex flex-column align-items-center p-2 ${
+                    location.pathname === item.path ? 'active fw-bold' : ''
+                  }`}
+                  style={{ 
+                    backgroundColor: location.pathname === item.path ? '#c9c87ae5' : 'transparent',
+                  }}
+                  title={item.label}
+                >
+                  <i className={`${item.icon} fs-5`}></i>
+                  <small className="mt-1" style={{ fontSize: '0.7rem' }}>{item.label}</small>
+                </Link>
+              </li>
+            ))}
+            
+            {/* ✅ BOTÓN DE CERRAR SESIÓN */}
+            <li className="nav-item mt-auto pt-3 border-top border-dark">
+              <button 
+                onClick={handleLogout}
+                className="admin-sidebar-link nav-link text-dark d-flex flex-column align-items-center p-2 fw-bold w-100 border-0"
                 style={{ 
-                  backgroundColor: location.pathname === item.path ? '#c9c87ae5' : 'transparent',
+                  backgroundColor: 'transparent',
+                  cursor: 'pointer'
                 }}
-                title={item.label}
+                title="Cerrar Sesión"
               >
-                <i className={`${item.icon} fs-5`}></i>
-                <small className="mt-1" style={{ fontSize: '0.7rem' }}>{item.label}</small>
-              </Link>
+                <i className="bi bi-box-arrow-right fs-5"></i>
+                <small className="mt-1" style={{ fontSize: '0.7rem' }}>Cerrar Sesión</small>
+              </button>
             </li>
-          ))}
-          
-          {/* ✅ BOTÓN DE CERRAR SESIÓN */}
-          <li className="nav-item mt-3 pt-3 border-top border-dark">
-            <button 
-              onClick={handleLogout}
-              className="admin-sidebar-link nav-link text-dark d-flex flex-column align-items-center p-2 fw-bold w-100 border-0"
-              style={{ 
-                backgroundColor: 'transparent',
-                cursor: 'pointer'
-              }}
-              title="Cerrar Sesión"
-            >
-              <i className="bi bi-box-arrow-right fs-5"></i>
-              <small className="mt-1" style={{ fontSize: '0.7rem' }}>Cerrar Sesión</small>
-            </button>
-          </li>
-        </ul>
+          </ul>
+        </div>
       </div>
     </div>
   );
@@ -112,10 +127,14 @@ export const AdminMobileNavbar = () => {
   return (
     <div ref={navbarRef}>
       {/* ✅ Navbar móvil */}
-      <nav className="navbar navbar-dark d-md-none fixed-top" style={{ 
-        backgroundColor: '#dedd8ff5',
-        minHeight: '56px'
-      }}>
+      <nav 
+        className="navbar navbar-dark d-md-none fixed-top" 
+        style={{ 
+          backgroundColor: '#dedd8ff5',
+          minHeight: '56px',
+          zIndex: 1030 // Mayor z-index para mobile
+        }}
+      >
         <div className="container-fluid">
           <span className="navbar-brand text-dark fw-bold">Panel Admin</span>
           <button 
@@ -133,19 +152,19 @@ export const AdminMobileNavbar = () => {
       {/* ✅ Menú móvil desplegable */}
       {isMobileMenuOpen && (
         <div 
-          className="d-md-none" 
+          className="d-md-none position-fixed" 
           style={{ 
-            position: 'fixed', 
             top: '56px',
             left: 0, 
             right: 0, 
-            zIndex: 1050,
+            bottom: 0,
+            zIndex: 1020,
             backgroundColor: '#dedd8ff5',
             borderTop: '1px solid #c9c87ae5',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+            overflowY: 'auto'
           }}
         >
-          <ul className="nav nav-pills flex-column p-3 m-0">
+          <ul className="nav nav-pills flex-column p-3 m-0 h-100">
             {menuItems.map((item) => (
               <li key={item.path} className="nav-item mb-2">
                 <Link 
@@ -166,7 +185,7 @@ export const AdminMobileNavbar = () => {
             ))}
             
             {/* ✅ BOTÓN DE CERRAR SESIÓN EN MÓVIL */}
-            <li className="nav-item mt-3 pt-3 border-top border-dark">
+            <li className="nav-item mt-auto pt-3 border-top border-dark">
               <button 
                 onClick={() => {
                   handleLogout();

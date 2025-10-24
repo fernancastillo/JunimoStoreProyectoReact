@@ -1,4 +1,4 @@
-// pages/admin/Ordenes.jsx
+// src/pages/admin/Ordenes.jsx - VERIFICAR que useOrdenes devuelva handleDelete
 import { useState } from 'react';
 import OrdenesStats from '../../components/admin/OrdenesStats';
 import OrdenesFiltros from '../../components/admin/OrdenesFiltros';
@@ -19,6 +19,7 @@ const Ordenes = () => {
     estadisticas,
     handleEdit,
     handleUpdateEstado,
+    handleDelete, // ✅ Asegurar que esta línea esté presente
     handleCloseModal,
     handleFiltroChange,
     handleLimpiarFiltros
@@ -88,10 +89,11 @@ const Ordenes = () => {
         }}
       />
 
-      {/* Tabla de órdenes */}
+      {/* Tabla de órdenes - ✅ AGREGAR onDelete aquí */}
       <OrdenesTable
         ordenes={ordenesFiltradas}
         onEdit={handleEdit}
+        onDelete={handleDelete} // ✅ ESTA LÍNEA DEBE ESTAR PRESENTE
         onUpdateEstado={handleUpdateEstado}
       />
 

@@ -1,4 +1,5 @@
 import ProductoForm from './ProductoForm';
+import { generarBoletaOrden } from '../../utils/admin/boletaUtils';
 
 const ProductoModal = ({ show, producto, categorias, getCodigoAutomatico, onSave, onClose }) => {
   if (!show) return null;
