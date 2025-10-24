@@ -160,3 +160,127 @@ export const generarEstadisticas = (productos) => {
     valorTotalInventario: formatCurrency(valorTotalInventario)
   };
 };
+
+// ====================================================================
+// FUNCIONES PARA ÓRDENES - AGREGADAS
+// ====================================================================
+
+/**
+ * Genera reporte de órdenes en formato CSV o JSON
+ */
+export const generarReporteOrdenes = (ordenes, formato, estadisticas) => {
+  const fecha = formatearFecha();
+  
+  try {
+    let contenido, nombreArchivo, tipoMIME;
+
+    if (formato === 'csv') {
+      contenido = generarCSVOrdenes(ordenes);
+      nombreArchivo = `reporte_ordenes_${fecha}.csv`;
+      tipoMIME = 'text/csv;charset=utf-8;';
+    } else if (formato === 'csv-excel') {
+      contenido = generarCSVOrdenesExcel(ordenes);
+      nombreArchivo = `reporte_ordenes_${fecha}.csv`;
+      tipoMIME = 'text/csv;charset=utf-8;';
+    } else {
+      contenido = generarJSONOrdenes(ordenes, estadisticas);
+      nombreArchivo = `reporte_ordenes_${fecha}.json`;
+      tipoMIME = 'application/json;charset=utf-8;';
+    }
+
+    descargarArchivo(contenido, nombreArchivo, tipoMIME);
+    
+  } catch (error) {
+    console.error('Error al generar reporte:', error);
+    alert('Error al generar el reporte. Por favor, intenta nuevamente.');
+  }
+};
+
+/**
+ * Genera CSV estándar para órdenes
+ */
+const generarCSVOrdenes = (ordenes) => {
+  const headers = ['Número Orden', 'Fecha', 'RUN Cliente', 'Estado', 'Total', 'Cantidad Productos'];
+  let csv = headers.join(',') + '\n';
+
+  ordenes.forEach(orden => {
+    const row = [
+      `"${orden.numeroOrden}"`,
+      `"${orden.fecha}"`,
+      `"${orden.run}"`,
+      `"${orden.estadoEnvio}"`,
+      orden.total,
+      orden.productos.length
+    ];
+    csv += row.join(',') + '\n';
+  });
+
+  return csv;
+};
+
+/**
+ * Genera CSV optimizado para Excel
+ */
+const generarCSVOrdenesExcel = (ordenes) => {
+  const headers = ['Número Orden', 'Fecha', 'RUN Cliente', 'Estado', 'Total', 'Cantidad Productos'];
+  let csv = '\uFEFF' + headers.join(';') + '\n'; // BOM para Excel
+
+  ordenes.forEach(orden => {
+    const row = [
+      orden.numeroOrden,
+      orden.fecha,
+      orden.run,
+      orden.estadoEnvio,
+      orden.total.toString().replace('.', ','),
+      orden.productos.length
+    ];
+    csv += row.join(';') + '\n';
+  });
+
+  return csv;
+};
+
+/**
+ * Genera JSON con metadata para órdenes
+ */
+const generarJSONOrdenes = (ordenes, estadisticas) => {
+  const reporte = {
+    metadata: {
+      fechaGeneracion: new Date().toISOString(),
+      totalOrdenes: estadisticas.totalOrdenes,
+      resumen: {
+        pendientes: estadisticas.pendientes,
+        enviadas: estadisticas.enviadas,
+        entregadas: estadisticas.entregadas,
+        canceladas: estadisticas.canceladas,
+        ingresosTotales: estadisticas.ingresosTotales
+      }
+    },
+    ordenes: ordenes
+  };
+
+  return JSON.stringify(reporte, null, 2);
+};
+
+/**
+ * Calcula estadísticas para órdenes (para usar en el modal de reportes)
+ */
+export const generarEstadisticasOrdenes = (ordenes) => {
+  const totalOrdenes = ordenes.length;
+  const pendientes = ordenes.filter(o => o.estadoEnvio === 'Pendiente').length;
+  const enviadas = ordenes.filter(o => o.estadoEnvio === 'Enviado').length;
+  const entregadas = ordenes.filter(o => o.estadoEnvio === 'Entregado').length;
+  const canceladas = ordenes.filter(o => o.estadoEnvio === 'Cancelado').length;
+  const ingresosTotales = ordenes
+    .filter(o => o.estadoEnvio === 'Entregado')
+    .reduce((sum, orden) => sum + orden.total, 0);
+
+  return {
+    totalOrdenes,
+    pendientes,
+    enviadas,
+    entregadas,
+    canceladas,
+    ingresosTotales: formatCurrency(ingresosTotales)
+  };
+};
