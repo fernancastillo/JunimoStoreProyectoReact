@@ -1,149 +1,76 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Indie+Flower&family=Lato:wght@300;400;700&display=swap');
 
-/* SOLO esto para .navbar-tienda - el background viene del style inline */
-.navbar-tienda {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  padding: 0 2rem;
+/* Navbar Base - EXACTO IGUAL */
+.custom-navbar {
   border-bottom: 3px solid #dedd8f;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   font-family: 'Lato', sans-serif;
+  padding: 0.5rem 0;
 }
 
-.nav-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
-  height: 80px;
-}
-
-/* Logo - EFECTO SUTIL */
-.nav-brand {
-  display: flex;
-  align-items: center;
-}
-
-.nav-logo {
-  color: white;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  transition: all 0.3s ease;
-  padding: 0.5rem;
-  background: transparent;
-  border: none;
-}
-
-.nav-logo:hover {
-  transform: translateY(-2px);
-  text-decoration: none;
-  color: white;
-}
-
+/* Logo - EXACTO IGUAL */
 .logo-container {
-  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
 }
 
 .logo-image {
   width: 150px;
-  height: 150px; /* DEBE ser igual al width para que sea cuadrado */
+  height: 150px;
   object-fit: contain;
   filter: brightness(1.05);
   animation: logoPulse 2s ease-in-out infinite;
   border-radius: 20%;
-  /* ELIMINA el background con radial-gradient */
-  background: transparent; /* Sin degradado que cause el cuadrado grande */
-  padding: 0px;
+  background: transparent;
 }
-/* Efecto de pulso MUY sutil */
+
 @keyframes logoPulse {
-  0%, 100% {
-    transform: scale(1);
-    background: 
-      radial-gradient(
-        circle at center,
-        rgba(46, 139, 87, 0.15) 0%,
-        rgba(67, 160, 71, 0.1) 30%,
-        transparent 70%
-      );
-  }
-  50% {
-    transform: scale(1.03); /* Escala mínima */
-    background: 
-      radial-gradient(
-        circle at center,
-        rgba(46, 139, 87, 0.2) 0%,
-        rgba(67, 160, 71, 0.15) 30%,
-        transparent 70%
-      );
-  }
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
 }
 
 .logo-text {
   font-family: 'Indie Flower', cursive;
   font-size: 1.8rem;
   font-weight: 700;
-  text-shadow: 
-    2px 2px 4px rgba(0, 0, 0, 0.5);
-  color: white; /* Color sólido blanco */
-  /* Degradado MUY sutil en el texto */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  color: white;
   background: linear-gradient(135deg, #ffffff, #f0f8f0);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Menú de navegación */
-.nav-menu {
-  display: flex;
-  list-style: none;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0;
-  align-items: center;
-}
-
-.nav-item {
-  position: relative;
-}
-
-.nav-link {
-  color: white;
-  text-decoration: none;
-  padding: 0.75rem 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+/* Menú Items - EXACTO IGUAL */
+.nav-menu-item {
+  color: white !important;
   font-weight: 600;
+  padding: 0.75rem 1.25rem !important;
   border-radius: 10px;
-  transition: all 0.3s ease;
+  margin: 0 0.25rem;
   background: rgba(255, 255, 255, 0.15);
   border: 2px solid transparent;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
 }
 
-.nav-link:hover {
-  background: rgba(222, 221, 143, 0.4);
-  border-color: rgba(222, 221, 143, 0.6);
+.nav-menu-item:hover,
+.nav-menu-item:focus {
+  background: rgba(222, 221, 143, 0.4) !important;
+  border-color: rgba(222, 221, 143, 0.6) !important;
   transform: translateY(-2px);
-  text-decoration: none;
-  color: white;
+  color: white !important;
 }
 
-.nav-link.active {
-  background: rgba(135, 206, 235, 0.4);
-  border-color: #87CEEB;
-  color: #000;
+.nav-menu-item.active {
+  background: rgba(135, 206, 235, 0.4) !important;
+  border-color: #87CEEB !important;
+  color: #000 !important;
   text-shadow: none;
 }
 
+/* Hot Badge - EXACTO IGUAL */
 .hot-badge {
   background: #ff6b6b;
   color: white;
@@ -151,7 +78,6 @@
   padding: 0.2rem 0.6rem;
   border-radius: 12px;
   font-weight: 700;
-  margin-left: 0.5rem;
   animation: pulse 2s infinite;
 }
 
@@ -160,196 +86,58 @@
   50% { transform: scale(1.05); }
 }
 
-/* Acciones - Solo carrito */
-.nav-actions {
-  display: flex;
-  align-items: center;
-}
-
+/* Carrito - EXACTO IGUAL */
 .nav-action-btn {
-  background: rgba(222, 221, 143, 0.3);
-  border: 2px solid rgba(222, 221, 143, 0.5);
-  color: white;
-  padding: 0.6rem;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: rgba(222, 221, 143, 0.3) !important;
+  border: 2px solid rgba(222, 221, 143, 0.5) !important;
+  border-radius: 10px !important;
+  padding: 0.6rem !important;
   width: 45px;
   height: 45px;
-  text-decoration: none;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
 }
 
 .nav-action-btn:hover {
-  background: rgba(222, 221, 143, 0.5);
+  background: rgba(222, 221, 143, 0.5) !important;
   transform: translateY(-2px);
-  text-decoration: none;
-  color: white;
 }
 
-.cart-count {
+.action-icon {
+  font-size: 1.2rem;
+}
+
+.cart-count-badge {
   position: absolute;
-  top: -5px;
-  right: -5px;
-  background: #ff4757;
+  top: -8px;
+  right: -8px;
+  background: #ff4444;
   color: white;
-  font-size: 0.7rem;
-  padding: 0.2rem 0.4rem;
   border-radius: 50%;
-  font-weight: 700;
-  min-width: 20px;
-  text-align: center;
-  border: 2px solid white;
-}
-
-/* Menú hamburguesa */
-.nav-hamburger {
-  display: none;
-  flex-direction: column;
-  cursor: pointer;
-  gap: 4px;
-  padding: 0.75rem;
-  border-radius: 8px;
-  background: rgba(222, 221, 143, 0.2);
-  border: 2px solid rgba(222, 221, 143, 0.3);
-}
-
-.nav-hamburger:hover {
-  background: rgba(222, 221, 143, 0.3);
-}
-
-.hamburger-bar {
-  display: block;
-  width: 25px;
-  height: 3px;
-  background-color: white;
-  border-radius: 2px;
-  transition: all 0.3s ease;
-}
-
-.nav-hamburger.active .hamburger-bar:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
-}
-
-.nav-hamburger.active .hamburger-bar:nth-child(2) {
-  opacity: 0;
-}
-
-.nav-hamburger.active .hamburger-bar:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
-}
-
-.nav-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: -1;
-}
-
-/* Responsive */
-@media screen and (max-width: 768px) {
-  .navbar-tienda {
-    padding: 0 1rem;
-  }
-
-  .nav-hamburger {
-    display: flex;
-  }
-
-  .nav-menu {
-    position: fixed;
-    top: 80px;
-    left: -100%;
-    width: 80%;
-    height: calc(100vh - 80px);
-    background: linear-gradient(135deg, #2E8B57 0%, #43A047 100%);
-    flex-direction: column;
-    gap: 0;
-    transition: left 0.3s ease;
-    padding: 2rem 0;
-    z-index: 1001;
-    border-right: 3px solid #dedd8f;
-  }
-
-  .nav-menu.active {
-    left: 0;
-  }
-
-  .nav-item {
-    width: 100%;
-  }
-
-  .nav-link {
-    border-radius: 0;
-    padding: 1.25rem 2rem;
-    border: none;
-    border-bottom: 1px solid rgba(222, 221, 143, 0.3);
-    justify-content: center;
-  }
-
-  .nav-actions {
-    gap: 0.5rem;
-  }
-
-  .nav-action-btn {
-    width: 40px;
-    height: 40px;
-  }
-
-  .logo-text {
-    font-size: 1.5rem;
-  }
-
-  .logo-image {
-    width: 60px;
-    height: 60px;
-  }
-}
-
-@media screen and (max-width: 480px) {
-  .logo-text {
-    display: none;
-  }
-  
-  .nav-logo {
-    padding: 0.5rem;
-  }
-
-  .logo-image {
-    width: 55px;
-    height: 55px;
-  }
-}
-
-/* Estilos para el botón de login */
-
-/* BOTÓN LOGIN GRANDE Y SIN FONDO */
-.login-btn-large {
-  background: transparent; /* Sin fondo */
-  border: none; /* Sin borde */
-  padding: 0;
-  margin-left: 150px; /* Más espacio del carrito */
-  text-decoration: none;
+  width: 20px;
+  height: 20px;
+  font-size: 0.7rem;
+  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.3s ease;
+  border: 2px solid white;
+  animation: pulse 2s infinite;
 }
 
-.login-btn-large:hover {
-  transform: translateY(-2px); /* Solo efecto hover */
-  background: transparent; /* Mantener transparente */
+/* Botón Login - EXACTO IGUAL */
+.login-btn-large {
+  padding: 0 !important;
+  margin-left: 2rem !important;
+  background: transparent !important;
+  border: none !important;
 }
 
 .login-icon-large {
-  width: 230px; /* Mismo tamaño que el logo Junimo */
-  height: 230px; /* Mismo tamaño que el logo Junimo */
+  width: 230px;
+  height: 230px;
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   transition: all 0.3s ease;
@@ -360,25 +148,218 @@
   transform: scale(1.05);
 }
 
+/* Perfil de Usuario - EXACTO IGUAL */
+.user-profile-btn {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: none !important;
+  border-radius: 20px !important;
+  padding: 8px 16px !important;
+  transition: all 0.3s ease;
+}
 
-@media screen and (max-width: 768px) {
-  .login-btn-large {
-    margin-left: 15px; /* Menos espacio en tablet */
-  }
-  
-  .login-icon-large {
-    width: 50px; /* Más pequeño en tablet */
-    height: 50px; /* Más pequeño en tablet */
+.user-profile-btn:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #dedd8f;
+  object-fit: cover;
+}
+
+.user-avatar-large {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 3px solid white;
+  object-fit: cover;
+}
+
+.user-name {
+  color: white;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Dropdown Menu - EXACTO IGUAL */
+.user-dropdown-menu {
+  border-radius: 15px !important;
+  border: none !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+  overflow: hidden;
+  margin-top: 8px !important;
+}
+
+.user-info {
+  background: linear-gradient(135deg, #2E8B57, #3CB371);
+  color: white;
+  border-radius: 15px 15px 0 0;
+}
+
+.user-discount {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.dropdown-link {
+  display: flex !important;
+  align-items: center;
+  padding: 12px 16px !important;
+  color: #2E8B57 !important;
+  transition: all 0.3s ease;
+}
+
+.dropdown-link:hover {
+  background: #f8f9fa !important;
+  color: #2E8B57 !important;
+  padding-left: 20px !important;
+}
+
+.logout-btn {
+  color: #dc3545 !important;
+  font-weight: 600;
+}
+
+.logout-btn:hover {
+  background: #dc3545 !important;
+  color: white !important;
+}
+
+/* Toggler Personalizado - EXACTO IGUAL */
+.custom-toggler {
+  border: 2px solid rgba(222, 221, 143, 0.5) !important;
+  background: rgba(222, 221, 143, 0.2) !important;
+}
+
+.custom-toggler .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='white' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+/* MEJORAS RESPONSIVE */
+@media (max-width: 1400px) {
+  .container-fluid-xxl {
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 }
 
-@media screen and (max-width: 480px) {
+@media (max-width: 1200px) {
+  .nav-menu-item {
+    padding: 0.6rem 1rem !important;
+    font-size: 0.9rem;
+  }
+  
+  .logo-image {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .logo-text {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .nav-menu-item {
+    margin: 0.5rem 0;
+    text-align: center;
+    width: 100%;
+  }
+  
   .login-btn-large {
-    margin-left: 10px; /* Menos espacio en móvil */
+    margin-left: 0 !important;
+    justify-content: center;
+    margin-top: 1rem;
   }
   
   .login-icon-large {
-    width: 45px; /* Más pequeño en móvil */
-    height: 45px; /* Más pequeño en móvil */
+    width: 180px;
+    height: 180px;
+  }
+  
+  .logo-image {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .logo-text {
+    font-size: 1.4rem;
+  }
+  
+  .nav-action-btn {
+    margin-right: 1rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .logo-image {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .logo-text {
+    font-size: 1.3rem;
+  }
+  
+  .login-icon-large {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .user-name {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .logo-text {
+    display: none;
+  }
+  
+  .user-name {
+    display: none;
+  }
+  
+  .login-icon-large {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .logo-image {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .nav-action-btn {
+    width: 40px;
+    height: 40px;
+    margin-right: 0.5rem !important;
+  }
+  
+  .action-icon {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .login-icon-large {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .logo-image {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .nav-menu-item {
+    padding: 0.5rem 0.8rem !important;
+    font-size: 0.85rem;
   }
 }

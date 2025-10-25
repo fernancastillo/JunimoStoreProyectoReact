@@ -1,14 +1,15 @@
-
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/tienda/Navbar/Navbar'
 import Footer from './components/tienda/Footer/Footer'
 import Index from './pages/tienda/Index'
 import Login from './pages/tienda/Login'
+import RegistroUsuario from './pages/tienda/RegistroUsuario'
 import Dashboard from './pages/admin/Dashboard'
 import Ordenes from './pages/admin/Ordenes'
 import Productos from './pages/admin/Productos'
 import Usuarios from './pages/admin/Usuarios'
 import Perfil from './pages/admin/Perfil'
+import TiendaProductos from './pages/tienda/Productos';
 import AdminSidebar, { AdminMobileNavbar } from './components/admin/AdminSidebar'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute' 
 
@@ -53,18 +54,19 @@ function App() {
               <div className="container-fluid mt-4">
                 <Routes>
                   <Route path='/index' element={<Index/>} />
-                  <Route path='/productos' element={<Index/>} />
+                  <Route path='/productos' element={<TiendaProductos/>} />
                   <Route path='/carrito' element={<Index/>} />
                   <Route path='/blogs' element={<Index/>} />
                   <Route path='/nosotros' element={<Index/>} />
                   <Route path='/contacto' element={<Index/>} />
                   <Route path='/ofertas' element={<Index/>} />
                   <Route path='/login' element={<Login/>} />
+                  <Route path='/registro' element={<RegistroUsuario/>} /> {/* Nueva ruta */}
                   <Route path='/' element={<Navigate to="/index" replace />} />
                 </Routes>
               </div>
             </main>
-              <Footer />
+            <Footer />
           </div>
         } />
       </Routes>
