@@ -12,6 +12,7 @@ import Perfil from './pages/admin/Perfil'
 import ProductoDetalle from './pages/tienda/productoDetalle';
 import TiendaProductos from './pages/tienda/Productos';
 import Nosotros from './pages/tienda/Nosotros';
+import Contacto from './pages/tienda/Contacto'; 
 import AdminSidebar, { AdminMobileNavbar } from './components/admin/AdminSidebar'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute' 
 
@@ -61,7 +62,7 @@ function App() {
                   <Route path='/carrito' element={<Index/>} />
                   <Route path='/blogs' element={<Index/>} />
                   <Route path='/nosotros' element={<Nosotros/>} />
-                  <Route path='/contacto' element={<Index/>} />
+                  <Route path='/contacto' element={<Contacto/>} />
                   <Route path='/ofertas' element={<Index/>} />
                   <Route path='/login' element={<Login/>} />
                   <Route path='/registro' element={<RegistroUsuario/>} /> {/* Nueva ruta */}

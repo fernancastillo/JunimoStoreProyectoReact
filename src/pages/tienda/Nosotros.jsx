@@ -50,7 +50,7 @@ const Nosotros = () => {
                       e.target.nextSibling.style.display = 'block';
                     }}
                   />
-                  <span className="nosotros-icono-alternativo" style={{display: 'none'}}>🌾</span>
+                  <span className="nosotros-icono-alternativo" style={{display: 'none'}}></span>
                 </div>
                 
                 <p className="nosotros-texto">
