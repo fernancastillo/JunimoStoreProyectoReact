@@ -1,6 +1,7 @@
 // src/components/admin/UsuarioModal.jsx
 import { useState, useEffect } from 'react';
 import { formatCurrency, formatDate } from '../../utils/admin/dashboardUtils';
+import { dataService } from '../../utils/dataService'; // Importar el dataService
 
 const UsuarioModal = ({ show, usuario, onClose, onUpdate }) => {
   const [formData, setFormData] = useState({
@@ -13,6 +14,10 @@ const UsuarioModal = ({ show, usuario, onClose, onUpdate }) => {
     region: ''
   });
 
+  // Estado para el historial de compras
+  const [historialCompras, setHistorialCompras] = useState([]);
+  const [cargandoCompras, setCargandoCompras] = useState(false);
+
   useEffect(() => {
     if (usuario) {
       setFormData({
@@ -24,8 +29,41 @@ const UsuarioModal = ({ show, usuario, onClose, onUpdate }) => {
         comuna: usuario.comuna || '',
         region: usuario.region || ''
       });
+
+      // Cargar historial de compras si el usuario es cliente
+      if (usuario.tipo === 'Cliente' && usuario.run) {
+        cargarHistorialCompras(usuario.run);
+      }
     }
   }, [usuario]);
+
+  // Función para cargar el historial de compras usando dataService
+  const cargarHistorialCompras = async (run) => {
+    try {
+      setCargandoCompras(true);
+      
+      // Usar dataService para obtener órdenes del usuario
+      const ordenesUsuario = dataService.getOrdenesPorUsuario(run);
+
+      // Formatear las órdenes para el historial
+      const historialFormateado = ordenesUsuario.map(orden => ({
+        id: orden.numeroOrden || `orden-${Date.now()}-${Math.random()}`,
+        fecha: orden.fecha || new Date().toLocaleDateString('es-CL'),
+        total: orden.total || 0,
+        estado: orden.estadoEnvio || 'Pendiente',
+        productos: orden.productos || orden.items || [],
+        numeroOrden: orden.numeroOrden || 'N/A',
+        direccionEnvio: orden.direccionEnvio || orden.direccion || ''
+      }));
+
+      setHistorialCompras(historialFormateado);
+    } catch (error) {
+      console.error('Error cargando historial de compras:', error);
+      setHistorialCompras([]);
+    } finally {
+      setCargandoCompras(false);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -41,15 +79,58 @@ const UsuarioModal = ({ show, usuario, onClose, onUpdate }) => {
     }));
   };
 
-  if (!show || !usuario) return null;
+  const getEstadoBadgeClass = (estado) => {
+    const estadoLower = estado?.toLowerCase() || '';
+    switch (estadoLower) {
+      case 'completado':
+      case 'completo':
+      case 'entregado':
+      case 'despachado':
+        return 'bg-success text-white';
+      case 'pendiente':
+      case 'procesando':
+        return 'bg-warning text-dark';
+      case 'cancelado':
+      case 'rechazado':
+        return 'bg-danger text-white';
+      case 'en camino':
+      case 'enviado':
+      case 'despachado':
+        return 'bg-info text-white';
+      case 'preparando':
+        return 'bg-primary text-white';
+      default: 
+        return 'bg-secondary text-white';
+    }
+  };
 
   const getTipoBadgeClass = (tipo) => {
     return tipo === 'Admin' ? 'bg-danger text-white' : 'bg-info text-white';
   };
 
+  // Función para formatear la lista de productos
+  const formatearProductos = (productos) => {
+    if (!productos || productos.length === 0) {
+      return 'Sin productos';
+    }
+    
+    const nombresProductos = productos.map(producto => 
+      producto.nombre || producto.nombreProducto || 'Producto sin nombre'
+    );
+    
+    return nombresProductos.slice(0, 2).join(', ') + 
+           (nombresProductos.length > 2 ? ` y ${nombresProductos.length - 2} más` : '');
+  };
+
+  // Calcular estadísticas basadas en las órdenes reales
+  const totalGastado = historialCompras.reduce((total, orden) => total + (orden.total || 0), 0);
+  const promedioPorOrden = historialCompras.length > 0 ? totalGastado / historialCompras.length : 0;
+
+  if (!show || !usuario) return null;
+
   return (
     <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-lg">
+      <div className="modal-dialog modal-xl">
         <div className="modal-content">
           <div className="modal-header bg-light">
             <h5 className="modal-title fw-bold">
@@ -60,6 +141,7 @@ const UsuarioModal = ({ show, usuario, onClose, onUpdate }) => {
           </div>
           <div className="modal-body">
             <div className="row">
+              {/* Columna izquierda - Información personal y edición */}
               <div className="col-md-6">
                 <div className="card h-100">
                   <div className="card-header bg-light">
@@ -181,19 +263,21 @@ const UsuarioModal = ({ show, usuario, onClose, onUpdate }) => {
                 </div>
               </div>
               
+              {/* Columna derecha - Información de cuenta e historial de compras */}
               <div className="col-md-6">
-                <div className="card h-100">
+                {/* Información de cuenta */}
+                <div className="card mb-4">
                   <div className="card-header bg-light">
                     <h6 className="mb-0 fw-bold">
                       <i className="bi bi-graph-up me-2"></i>
-                      Información de Cuenta
+                      Estadísticas de Compras
                     </h6>
                   </div>
                   <div className="card-body">
                     <table className="table table-sm table-borderless">
                       <tbody>
                         <tr>
-                          <td className="fw-bold text-muted">Tipo:</td>
+                          <td className="fw-bold text-muted">Tipo de Usuario:</td>
                           <td>
                             <span className={`badge ${getTipoBadgeClass(usuario.tipo)}`}>
                               {usuario.tipo}
@@ -201,47 +285,120 @@ const UsuarioModal = ({ show, usuario, onClose, onUpdate }) => {
                           </td>
                         </tr>
                         <tr>
-                          <td className="fw-bold text-muted">Fecha Nacimiento:</td>
-                          <td>{formatDate(usuario.fecha_nacimiento)}</td>
-                        </tr>
-                        <tr>
-                          <td className="fw-bold text-muted">Total Compras:</td>
+                          <td className="fw-bold text-muted">Total de Órdenes:</td>
                           <td>
                             <span className="badge bg-primary">
-                              {usuario.totalCompras}
+                              {historialCompras.length} orden(es)
                             </span>
                           </td>
                         </tr>
                         <tr>
                           <td className="fw-bold text-muted">Total Gastado:</td>
                           <td className="fw-bold text-success">
-                            {formatCurrency(usuario.totalGastado)}
+                            {formatCurrency(totalGastado)}
                           </td>
                         </tr>
                         <tr>
-                          <td className="fw-bold text-muted">Promedio por Compra:</td>
+                          <td className="fw-bold text-muted">Promedio por Orden:</td>
                           <td>
-                            {usuario.totalCompras > 0 
-                              ? formatCurrency(usuario.totalGastado / usuario.totalCompras)
-                              : formatCurrency(0)
-                            }
+                            {formatCurrency(promedioPorOrden)}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="fw-bold text-muted">Órdenes Activas:</td>
+                          <td>
+                            <span className="badge bg-info">
+                              {historialCompras.filter(o => 
+                                o.estado?.toLowerCase() !== 'cancelado' && 
+                                o.estado?.toLowerCase() !== 'entregado'
+                              ).length}
+                            </span>
                           </td>
                         </tr>
                       </tbody>
                     </table>
-                    
-                    {/* Información adicional */}
-                    <div className="mt-4 p-3 bg-light rounded">
-                      <h6 className="fw-bold mb-2">Resumen de Actividad</h6>
-                      <small className="text-muted">
-                        {usuario.totalCompras === 0 
-                          ? 'Este usuario aún no ha realizado compras.'
-                          : `Ha realizado ${usuario.totalCompras} compra(s) con un total de ${formatCurrency(usuario.totalGastado)}.`
-                        }
-                      </small>
-                    </div>
                   </div>
                 </div>
+
+                {/* Historial de compras - Solo para clientes */}
+                {usuario.tipo === 'Cliente' && (
+                  <div className="card">
+                    <div className="card-header bg-light d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0 fw-bold">
+                        <i className="bi bi-receipt me-2"></i>
+                        Historial de Órdenes
+                        <span className="badge bg-primary ms-2">
+                          {historialCompras.length}
+                        </span>
+                      </h6>
+                      <button 
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => cargarHistorialCompras(usuario.run)}
+                        title="Actualizar historial"
+                        disabled={cargandoCompras}
+                      >
+                        <i className={`bi ${cargandoCompras ? 'bi-arrow-repeat' : 'bi-arrow-clockwise'}`}></i>
+                      </button>
+                    </div>
+                    <div className="card-body p-0">
+                      {cargandoCompras ? (
+                        <div className="text-center py-4">
+                          <div className="spinner-border spinner-border-sm text-primary me-2"></div>
+                          Cargando historial de órdenes...
+                        </div>
+                      ) : historialCompras.length > 0 ? (
+                        <div className="table-responsive" style={{ maxHeight: '300px' }}>
+                          <table className="table table-sm table-hover mb-0">
+                            <thead className="sticky-top bg-light">
+                              <tr>
+                                <th># Orden</th>
+                                <th>Fecha</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Productos</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {historialCompras.map((compra) => (
+                                <tr key={compra.id}>
+                                  <td>
+                                    <small className="text-muted fw-bold">#{compra.numeroOrden}</small>
+                                  </td>
+                                  <td>
+                                    <small>{formatDate(compra.fecha)}</small>
+                                  </td>
+                                  <td className="fw-bold text-success">
+                                    {formatCurrency(compra.total)}
+                                  </td>
+                                  <td>
+                                    <span className={`badge ${getEstadoBadgeClass(compra.estado)}`}>
+                                      {compra.estado}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <small title={compra.productos?.map(p => p.nombre).join(', ')}>
+                                      {formatearProductos(compra.productos)}
+                                      <br />
+                                      <span className="text-muted">
+                                        ({compra.productos?.length || 0} producto(s))
+                                      </span>
+                                    </small>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-muted">
+                          <i className="bi bi-cart-x display-6 d-block mb-2"></i>
+                          <p>No se encontraron órdenes registradas</p>
+                          <small>RUN: {usuario.run}</small>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

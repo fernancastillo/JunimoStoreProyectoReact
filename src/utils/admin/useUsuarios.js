@@ -40,12 +40,23 @@ export const useUsuarios = () => {
   }, []);
 
   const handleEdit = (usuario) => {
+    // Validar que no sea administrador
+    if (usuario.tipo === 'Admin') {
+      alert('No se pueden editar usuarios administradores');
+      return;
+    }
     setEditingUsuario(usuario);
     setShowModal(true);
   };
 
   const handleUpdateUsuario = async (run, datosActualizados) => {
     try {
+      // Validar que no se esté intentando modificar un administrador
+      const usuarioOriginal = usuarios.find(u => u.run === run);
+      if (usuarioOriginal && usuarioOriginal.tipo === 'Admin') {
+        throw new Error('No se pueden modificar usuarios administradores');
+      }
+      
       await usuarioService.updateUsuario(run, datosActualizados);
       await loadUsuarios();
     } catch (error) {
@@ -56,6 +67,12 @@ export const useUsuarios = () => {
 
   const handleDelete = async (run) => {
     try {
+      // Validar que no sea administrador
+      const usuario = usuarios.find(u => u.run === run);
+      if (usuario && usuario.tipo === 'Admin') {
+        throw new Error('No se pueden eliminar usuarios administradores');
+      }
+      
       await usuarioService.deleteUsuario(run);
       await loadUsuarios();
       return { success: true };

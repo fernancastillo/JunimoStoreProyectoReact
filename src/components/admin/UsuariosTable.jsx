@@ -4,6 +4,12 @@ import { formatCurrency, formatDate } from '../../utils/admin/dashboardUtils';
 const UsuariosTable = ({ usuarios, onEdit, onDelete }) => {
   
   const handleEliminarUsuario = async (usuario) => {
+    // Verificar si es administrador
+    if (usuario.tipo === 'Admin') {
+      alert('No se pueden eliminar usuarios administradores');
+      return;
+    }
+
     const mensajeConfirmacion = `
 ¿Estás seguro de que quieres eliminar al usuario?
 
@@ -28,6 +34,15 @@ const UsuariosTable = ({ usuarios, onEdit, onDelete }) => {
     }
   };
 
+  const handleEditarUsuario = (usuario) => {
+    // Verificar si es administrador
+    if (usuario.tipo === 'Admin') {
+      alert('No se pueden editar usuarios administradores');
+      return;
+    }
+    onEdit(usuario);
+  };
+
   const getTipoBadgeClass = (tipo) => {
     return tipo === 'Admin' ? 'bg-danger text-white' : 'bg-info text-white';
   };
@@ -36,6 +51,10 @@ const UsuariosTable = ({ usuarios, onEdit, onDelete }) => {
     if (compras === 0) return 'bg-secondary text-white';
     if (compras <= 2) return 'bg-primary text-white';
     return 'bg-success text-white';
+  };
+
+  const esAdministrador = (usuario) => {
+    return usuario.tipo === 'Admin';
   };
 
   return (
@@ -87,28 +106,33 @@ const UsuariosTable = ({ usuarios, onEdit, onDelete }) => {
                     <strong>{formatCurrency(usuario.totalGastado)}</strong>
                   </td>
                   <td>
-                    <div className="btn-group btn-group-sm">
-                      <button
-                        className="btn btn-primary"
-                        onClick={() => onEdit(usuario)}
-                        title="Ver detalles"
-                      >
-                        <i className="bi bi-eye"></i>
-                      </button>
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => handleEliminarUsuario(usuario)}
-                        title="Eliminar usuario"
-                        disabled={usuario.tipo === 'Admin'}
-                      >
-                        <i className="bi bi-trash"></i>
-                      </button>
-                    </div>
-                    {/* Mensaje informativo */}
-                    {usuario.tipo === 'Admin' && (
-                      <small className="text-danger d-block mt-1">
-                        No se puede eliminar
-                      </small>
+                    {esAdministrador(usuario) ? (
+                      <div className="text-center">
+                        <small className="text-muted d-block">
+                          <i className="bi bi-shield-lock me-1"></i>
+                          Protegido
+                        </small>
+                        <small className="text-muted">
+                          No editable
+                        </small>
+                      </div>
+                    ) : (
+                      <div className="btn-group btn-group-sm">
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => handleEditarUsuario(usuario)}
+                          title="Editar usuario"
+                        >
+                          <i className="bi bi-pencil"></i>
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          onClick={() => handleEliminarUsuario(usuario)}
+                          title="Eliminar usuario"
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
