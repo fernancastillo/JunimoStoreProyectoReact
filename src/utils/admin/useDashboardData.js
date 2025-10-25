@@ -1,3 +1,4 @@
+// src/utils/admin/useDashboardData.js
 import { useState, useEffect } from 'react';
 import { dataService } from '../dataService';
 
@@ -26,7 +27,11 @@ export const useDashboardData = () => {
 
     const ordenesPendientes = ordenes.filter(o => o.estadoEnvio === 'Pendiente').length;
     const ordenesEntregadas = ordenes.filter(o => o.estadoEnvio === 'Entregado').length;
-    const ingresosTotales = ordenes.reduce((total, orden) => total + orden.total, 0);
+    
+    // SOLO sumar órdenes entregadas (para consistencia con órdenes/usuarios)
+    const ingresosTotales = ordenes
+      .filter(o => o.estadoEnvio === 'Entregado')
+      .reduce((total, orden) => total + orden.total, 0);
 
     setStats({
       totalUsuarios: usuarios.length,
@@ -34,7 +39,7 @@ export const useDashboardData = () => {
       totalOrdenes: ordenes.length,
       ordenesPendientes,
       ordenesEntregadas,
-      ingresosTotales
+      ingresosTotales // Ahora solo órdenes entregadas
     });
 
     const stockCritico = productos.filter(p => p.stock <= p.stock_critico);

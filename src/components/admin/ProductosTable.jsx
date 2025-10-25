@@ -22,19 +22,6 @@ const ProductosTable = ({ productos, onEdit, onDelete, onGenerarReporte }) => {
 
   return (
     <div className="card shadow">
-      <div className="card-header py-3 d-flex justify-content-between align-items-center">
-        <h6 className="m-0 font-weight-bold text-primary">Lista de Productos</h6>
-        <div>
-          <button
-            className="btn btn-success btn-sm"
-            onClick={() => onGenerarReporte('csv')}
-            title="Generar reporte de productos"
-          >
-            <i className="bi bi-file-earmark-spreadsheet me-1"></i>
-            Generar Reporte
-          </button>
-        </div>
-      </div>
       <div className="card-body">
         <div className="table-responsive">
           <table className="table table-bordered table-hover" width="100%" cellSpacing="0">
@@ -102,45 +89,6 @@ const ProductosTable = ({ productos, onEdit, onDelete, onGenerarReporte }) => {
               ))}
             </tbody>
           </table>
-        </div>
-        
-        {/* Botón de reporte al final de la tabla - MEJORADO */}
-        <div className="mt-4 p-3 bg-light rounded">
-          <div className="row align-items-center">
-            <div className="col-md-8">
-              <h6 className="mb-1">
-                <i className="bi bi-graph-up me-2"></i>
-                Reporte de Productos
-              </h6>
-              <small className="text-muted">
-                Genera un reporte completo con estadísticas. Elige el formato que prefieras.
-              </small>
-            </div>
-            <div className="col-md-4 text-end">
-              <div className="btn-group-vertical w-100">
-                <button
-                  className="btn btn-outline-success text-start"
-                  onClick={() => onGenerarReporte('csv')}
-                  title="Descargar reporte en formato CSV"
-                >
-                  <i className="bi bi-file-earmark-spreadsheet me-2"></i>
-                  Reporte CSV
-                  <br />
-                  <small className="text-muted">Elige entre estándar o Excel</small>
-                </button>
-                <button
-                  className="btn btn-outline-primary text-start mt-2"
-                  onClick={() => onGenerarReporte('json')}
-                  title="Descargar reporte en formato JSON"
-                >
-                  <i className="bi bi-file-code me-2"></i>
-                  Reporte JSON
-                  <br />
-                  <small className="text-muted">Para uso técnico y programación</small>
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

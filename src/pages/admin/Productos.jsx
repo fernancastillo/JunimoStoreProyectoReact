@@ -1,24 +1,28 @@
+// src/pages/admin/Productos.jsx
 import { useState } from 'react';
 import { useProductos } from '../../utils/admin/useProductos';
 import ProductosTable from '../../components/admin/ProductosTable';
 import ProductoModal from '../../components/admin/ProductoModal';
+import ProductosFiltros from '../../components/admin/ProductosFiltros';
 import ReporteModal from '../../components/admin/ReporteModal';
-import { 
-  generarReporteCSV, 
+import {
+  generarReporteCSV,
   generarReporteCSVExcel,
-  generarReporteJSON, 
+  generarReporteJSON,
   descargarArchivo,
   generarEstadisticas,
-  formatearFecha 
+  formatearFecha
 } from '../../utils/admin/reportUtils';
 
 const Productos = () => {
   const {
     productos,
+    productosFiltrados,
     categorias,
     loading,
     editingProducto,
     showModal,
+    filtros,
     handleCreate,
     handleUpdate,
     handleDelete,
@@ -26,7 +30,9 @@ const Productos = () => {
     handleCreateNew,
     handleCloseModal,
     getCodigoAutomatico,
-    actualizarCategorias
+    actualizarCategorias,
+    handleFiltroChange,
+    handleLimpiarFiltros
   } = useProductos();
 
   // Estado para controlar el modal de reportes
@@ -61,24 +67,24 @@ const Productos = () => {
       let contenido, nombreArchivo, tipoMIME;
 
       if (formato === 'csv') {
-        contenido = generarReporteCSV(productos);
+        contenido = generarReporteCSV(productosFiltrados);
         nombreArchivo = `reporte_productos_${fecha}.csv`;
         tipoMIME = 'text/csv;charset=utf-8;';
       } else if (formato === 'csv-excel') {
-        contenido = generarReporteCSVExcel(productos);
+        contenido = generarReporteCSVExcel(productosFiltrados);
         nombreArchivo = `reporte_productos_${fecha}.csv`;
         tipoMIME = 'text/csv;charset=utf-8;';
       } else {
-        contenido = generarReporteJSON(productos);
+        contenido = generarReporteJSON(productosFiltrados);
         nombreArchivo = `reporte_productos_${fecha}.json`;
         tipoMIME = 'application/json;charset=utf-8;';
       }
 
       descargarArchivo(contenido, nombreArchivo, tipoMIME);
-      
-      const estadisticas = generarEstadisticas(productos);
+
+      const estadisticas = generarEstadisticas(productosFiltrados);
       console.log('Estadísticas del reporte:', estadisticas);
-      
+
     } catch (error) {
       console.error('Error al generar reporte:', error);
       alert('Error al generar el reporte. Por favor, intenta nuevamente.');
@@ -88,6 +94,7 @@ const Productos = () => {
   // Función para manejar selección de formato CSV
   const handleSeleccionCSV = (formato) => {
     handleGenerarReporte(formato);
+    setShowReporteModal(false);
   };
 
   // Función para abrir modal de selección CSV
@@ -102,8 +109,8 @@ const Productos = () => {
 
   // Función para manejar reporte JSON
   const handleReporteJSON = () => {
-    const estadisticas = generarEstadisticas(productos);
-    
+    const estadisticas = generarEstadisticas(productosFiltrados);
+
     const confirmar = window.confirm(`
 ESTADÍSTICAS DEL REPORTE:
 
@@ -111,7 +118,7 @@ ESTADÍSTICAS DEL REPORTE:
 • Sin stock: ${estadisticas.sinStock}
 • Stock crítico: ${estadisticas.stockCritico}
 • Stock normal: ${estadisticas.stockNormal}
-• Valor total del inventario: ${estadisticas.valorTotalInventario}
+• Categorías: ${estadisticas.categorias}
 
 ¿Deseas descargar el reporte en formato JSON?
     `.trim());
@@ -121,7 +128,7 @@ ESTADÍSTICAS DEL REPORTE:
     }
   };
 
-  // unción principal para manejar reportes
+  // Función principal para manejar reportes
   const handleReporteSolicitado = (formato) => {
     if (formato === 'csv') {
       handleAbrirModalCSV();
@@ -142,39 +149,51 @@ ESTADÍSTICAS DEL REPORTE:
     );
   }
 
-  const estadisticas = generarEstadisticas(productos);
+  const estadisticas = generarEstadisticas(productosFiltrados);
 
   return (
     <div className="container-fluid">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="h3 mb-0 text-gray-800">Gestión de Productos</h1>
-        <div>
+        <div className="d-flex flex-wrap gap-2">
           <button
-            className="btn btn-success me-2"
+            className="btn btn-success"
+            onClick={handleCreateNew}
+          >
+            <i className="bi bi-plus-circle me-2"></i>
+            Agregar Producto
+          </button>
+          <button
+            className="btn btn-primary"
             onClick={() => handleReporteSolicitado('csv')}
           >
             <i className="bi bi-file-earmark-spreadsheet me-2"></i>
             Reporte CSV
           </button>
           <button
-            className="btn btn-primary me-2"
+            className="btn btn-warning"
             onClick={() => handleReporteSolicitado('json')}
           >
             <i className="bi bi-file-code me-2"></i>
             Reporte JSON
           </button>
-          <button
-            className="btn btn-primary"
-            onClick={handleCreateNew}
-          >
-            <i className="bi bi-plus-circle me-2"></i>
-            Agregar Producto
-          </button>
         </div>
       </div>
 
-      {/* Estadísticas rápidas */}
+      {/* Filtros */}
+      <ProductosFiltros
+        filtros={filtros}
+        categorias={categorias}
+        onFiltroChange={handleFiltroChange}
+        onLimpiarFiltros={handleLimpiarFiltros}
+        resultados={{
+          filtrados: productosFiltrados.length,
+          totales: productos.length
+        }}
+      />
+
+      {/* Estadísticas rápidas - usar productosFiltrados */}
       <div className="row mb-4">
         <div className="col-xl-3 col-md-6 mb-4">
           <div className="card border-left-primary shadow h-100 py-2">
@@ -182,10 +201,10 @@ ESTADÍSTICAS DEL REPORTE:
               <div className="row no-gutters align-items-center">
                 <div className="col mr-2">
                   <div className="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                    Total Productos
+                    Productos Filtrados
                   </div>
                   <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {productos.length}
+                    {productosFiltrados.length}
                   </div>
                 </div>
                 <div className="col-auto">
@@ -205,7 +224,7 @@ ESTADÍSTICAS DEL REPORTE:
                     Stock Crítico
                   </div>
                   <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {productos.filter(p => p.stock <= p.stock_critico).length}
+                    {productosFiltrados.filter(p => p.stock > 0 && p.stock <= p.stock_critico).length}
                   </div>
                 </div>
                 <div className="col-auto">
@@ -225,7 +244,7 @@ ESTADÍSTICAS DEL REPORTE:
                     Sin Stock
                   </div>
                   <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {productos.filter(p => p.stock === 0).length}
+                    {productosFiltrados.filter(p => p.stock === 0).length}
                   </div>
                 </div>
                 <div className="col-auto">
@@ -242,10 +261,10 @@ ESTADÍSTICAS DEL REPORTE:
               <div className="row no-gutters align-items-center">
                 <div className="col mr-2">
                   <div className="text-xs font-weight-bold text-success text-uppercase mb-1">
-                    Categorías
+                    Categorías Filtradas
                   </div>
                   <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {new Set(productos.map(p => p.categoria)).size}
+                    {new Set(productosFiltrados.map(p => p.categoria)).size}
                   </div>
                 </div>
                 <div className="col-auto">
@@ -257,9 +276,9 @@ ESTADÍSTICAS DEL REPORTE:
         </div>
       </div>
 
-      {/* Tabla de productos */}
+      {/* Tabla de productos - usar productosFiltrados */}
       <ProductosTable
-        productos={productos}
+        productos={productosFiltrados}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onGenerarReporte={handleReporteSolicitado}
@@ -275,10 +294,11 @@ ESTADÍSTICAS DEL REPORTE:
         onClose={handleCloseModal}
       />
 
-      {/* Modal para selección de formato de reporte */}
+      {/* Modal para reportes */}
       <ReporteModal
         show={showReporteModal}
         estadisticas={estadisticas}
+        tipo="productos"
         onSeleccionarFormato={handleSeleccionCSV}
         onClose={handleCerrarModalReporte}
       />

@@ -39,7 +39,7 @@ const OrdenesStats = ({ estadisticas }) => {
       border: 'border-left-danger'
     },
     {
-      title: 'Ingresos',
+      title: 'Ingresos Totales',
       value: formatCurrency(estadisticas.ingresosTotales),
       icon: 'bi-currency-dollar',
       color: 'secondary',

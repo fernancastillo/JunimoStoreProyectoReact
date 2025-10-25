@@ -1,4 +1,4 @@
-// src/pages/admin/Ordenes.jsx - VERIFICAR que useOrdenes devuelva handleDelete
+// src/pages/admin/Ordenes.jsx
 import { useState } from 'react';
 import OrdenesStats from '../../components/admin/OrdenesStats';
 import OrdenesFiltros from '../../components/admin/OrdenesFiltros';
@@ -19,7 +19,7 @@ const Ordenes = () => {
     estadisticas,
     handleEdit,
     handleUpdateEstado,
-    handleDelete, // ✅ Asegurar que esta línea esté presente
+    handleDelete,
     handleCloseModal,
     handleFiltroChange,
     handleLimpiarFiltros
@@ -31,12 +31,14 @@ const Ordenes = () => {
     if (formato === 'csv') {
       setShowReporteModal(true);
     } else {
-      generarReporteOrdenes(ordenesFiltradas, formato, estadisticas);
+      // CORREGIDO: Usar el nuevo orden de parámetros
+      generarReporteOrdenes(formato, ordenesFiltradas);
     }
   };
 
   const handleSeleccionFormato = (formato) => {
-    generarReporteOrdenes(ordenesFiltradas, formato, estadisticas);
+    // CORREGIDO: Usar el nuevo orden de parámetros
+    generarReporteOrdenes(formato, ordenesFiltradas);
     setShowReporteModal(false);
   };
 
@@ -57,16 +59,16 @@ const Ordenes = () => {
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="h3 mb-0 text-gray-800">Gestión de Órdenes</h1>
-        <div>
+        <div className="d-flex flex-wrap gap-2">
           <button
-            className="btn btn-success me-2"
+            className="btn btn-primary"
             onClick={() => handleGenerarReporte('csv')}
           >
             <i className="bi bi-file-earmark-spreadsheet me-2"></i>
             Reporte CSV
           </button>
           <button
-            className="btn btn-primary"
+            className="btn btn-warning"
             onClick={() => handleGenerarReporte('json')}
           >
             <i className="bi bi-file-code me-2"></i>
@@ -75,10 +77,10 @@ const Ordenes = () => {
         </div>
       </div>
 
-      {/* Estadísticas - Componente separado */}
+      {/* Estadísticas */}
       <OrdenesStats estadisticas={estadisticas} />
 
-      {/* Filtros - Componente separado */}
+      {/* Filtros */}
       <OrdenesFiltros
         filtros={filtros}
         onFiltroChange={handleFiltroChange}
@@ -89,11 +91,11 @@ const Ordenes = () => {
         }}
       />
 
-      {/* Tabla de órdenes - ✅ AGREGAR onDelete aquí */}
+      {/* Tabla de órdenes */}
       <OrdenesTable
         ordenes={ordenesFiltradas}
         onEdit={handleEdit}
-        onDelete={handleDelete} // ✅ ESTA LÍNEA DEBE ESTAR PRESENTE
+        onDelete={handleDelete}
         onUpdateEstado={handleUpdateEstado}
       />
 
@@ -105,10 +107,11 @@ const Ordenes = () => {
         onUpdateEstado={handleUpdateEstado}
       />
 
-      {/* Modal de reportes (reutilizado) */}
+      {/* Modal de reportes */}
       <ReporteModal
         show={showReporteModal}
         estadisticas={estadisticas}
+        tipo="ordenes"
         onSeleccionarFormato={handleSeleccionFormato}
         onClose={() => setShowReporteModal(false)}
       />
