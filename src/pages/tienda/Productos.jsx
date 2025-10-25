@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Alert, Card, Button, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Alert, Card, Button, Badge, Form } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import productosData from '../../data/productos.json';
 import categoriasImage from '../../assets/tienda/categorias.png';
@@ -10,6 +10,7 @@ const Productos = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [showAlert, setShowAlert] = useState(false);
   const [alertProduct, setAlertProduct] = useState(null);
 
@@ -25,13 +26,21 @@ const Productos = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedCategory === 'all') {
-      setFilteredProducts(products);
-    } else {
-      const filtered = products.filter(product => product.categoria === selectedCategory);
-      setFilteredProducts(filtered);
+    let filtered = products;
+
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(product => product.categoria === selectedCategory);
     }
-  }, [selectedCategory, products]);
+
+    if (searchTerm) {
+      filtered = filtered.filter(product =>
+        product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredProducts(filtered);
+  }, [selectedCategory, searchTerm, products]);
 
   const handleAddToCart = (product) => {
     const savedCart = localStorage.getItem('junimoCart');
@@ -113,7 +122,23 @@ const Productos = () => {
           </Col>
         </Row>
 
-        {/* Botones de Categorías - SIN FONDO BLANCO */}
+        {/* FILTRO DE BÚSQUEDA */}
+        <Row className="mb-4">
+          <Col md={8} className="mx-auto">
+            <Form.Group>
+              <Form.Label className="filter-label">🔍 Buscar Productos</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Buscar por nombre o descripción..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="filter-input"
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+
+        {/* Botones de Categorías */}
         <Row className="mb-4">
           <Col>
             <div className="category-buttons">
@@ -131,7 +156,7 @@ const Productos = () => {
           </Col>
         </Row>
 
-        {/* Contador de Resultados - MÁS PEQUEÑO */}
+        {/* Contador de Resultados */}
         <Row className="mb-4">
           <Col>
             <div className="text-center">
@@ -182,15 +207,29 @@ const Productos = () => {
                         📦 Stock: {product.stock}
                       </small>
                     </div>
-                    <Button 
-                      variant="warning" 
-                      size="sm"
-                      className="w-100 add-to-cart-btn"
-                      onClick={() => handleAddToCart(product)}
-                      disabled={product.stock === 0}
-                    >
-                      {product.stock === 0 ? '❌ Sin Stock' : '🛒 Agregar al Carrito'}
-                    </Button>
+                    
+                    {/* BOTONES MEJORADOS - Agregar al Carrito y Ver Detalles */}
+                    <div className="d-grid gap-2">
+                      <Button 
+                        variant="warning" 
+                        size="sm"
+                        className="add-to-cart-btn"
+                        onClick={() => handleAddToCart(product)}
+                        disabled={product.stock === 0}
+                      >
+                        {product.stock === 0 ? '❌ Sin Stock' : '🛒 Agregar al Carrito'}
+                      </Button>
+                      
+                      <Button 
+                        variant="outline-primary" 
+                        size="sm"
+                        className="details-btn"
+                        as={Link}
+                        to={`/producto/${product.codigo}`}
+                      >
+                        👁️ Ver Detalles
+                      </Button>
+                    </div>
                   </div>
                 </Card.Body>
               </Card>
@@ -202,10 +241,14 @@ const Productos = () => {
               <div className="text-center py-5">
                 <div className="empty-state">
                   <span className="empty-icon">🌾</span>
-                  <h4 className="text-white mt-3">No hay productos en esta categoría</h4>
+                  <h4 className="text-white mt-3">No se encontraron productos</h4>
+                  <p className="text-white">Intenta con otros filtros de búsqueda</p>
                   <Button 
                     variant="outline-warning" 
-                    onClick={() => setSelectedCategory('all')}
+                    onClick={() => {
+                      setSelectedCategory('all');
+                      setSearchTerm('');
+                    }}
                     className="mt-2"
                   >
                     Ver Todos los Productos
