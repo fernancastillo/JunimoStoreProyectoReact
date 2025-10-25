@@ -14,6 +14,7 @@ import TiendaProductos from './pages/tienda/Productos';
 import Nosotros from './pages/tienda/Nosotros';
 import Contacto from './pages/tienda/Contacto'; 
 import Blogs from './pages/tienda/blogs'
+import Ofertas from './pages/tienda/ofertas'
 import AdminSidebar, { AdminMobileNavbar } from './components/admin/AdminSidebar'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute' 
 
@@ -64,7 +65,7 @@ function App() {
                   <Route path='/blogs' element={<Blogs/>} />
                   <Route path='/nosotros' element={<Nosotros/>} />
                   <Route path='/contacto' element={<Contacto/>} />
-                  <Route path='/ofertas' element={<Index/>} />
+                  <Route path='/ofertas' element={<Ofertas/>} />
                   <Route path='/login' element={<Login/>} />
                   <Route path='/registro' element={<RegistroUsuario/>} /> {/* Nueva ruta */}
                   <Route path='/' element={<Navigate to="/index" replace />} />
