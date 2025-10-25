@@ -1,12 +1,12 @@
 // src/components/admin/ReporteModal.jsx
 import { formatCurrency } from '../../utils/admin/dashboardUtils';
 
-const ReporteModal = ({ 
-  show, 
-  estadisticas, 
+const ReporteModal = ({
+  show,
+  estadisticas,
   tipo = 'ordenes', // 'ordenes', 'usuarios', 'productos'
-  onSeleccionarFormato, 
-  onClose 
+  onSeleccionarFormato,
+  onClose
 }) => {
   if (!show) return null;
 
@@ -63,7 +63,7 @@ const ReporteModal = ({
           <div className="col-md-6">
             <div className="card border-0 bg-light">
               <div className="card-body text-center">
-                <h3 className="text-success mb-1">{stats.ingresosTotales || formatCurrency(0)}</h3>
+                <h3 className="text-success mb-1">{formatCurrency(Number(stats.ingresosTotales) || 0)}</h3>
                 <small className="text-muted">INGRESOS TOTALES</small>
               </div>
             </div>
@@ -76,7 +76,7 @@ const ReporteModal = ({
             <i className="bi bi-pie-chart me-2"></i>
             Distribución por Estado
           </h6>
-          
+
           <div className="row g-3">
             {/* Pendientes */}
             <div className="col-md-6">
@@ -191,7 +191,7 @@ const ReporteModal = ({
             <i className="bi bi-people-fill me-2"></i>
             Distribución por Tipo de Usuario
           </h6>
-          
+
           <div className="row g-3">
             {/* Clientes */}
             <div className="col-md-6">
@@ -277,111 +277,111 @@ const ReporteModal = ({
   };
 
   const renderEstadisticasProductos = () => {
-  const stats = estadisticas || {
-    totalProductos: 0,
-    sinStock: 0,
-    stockCritico: 0,
-    stockNormal: 0,
-    categorias: 0 // Asegurar que categorías tenga valor por defecto
+    const stats = estadisticas || {
+      totalProductos: 0,
+      sinStock: 0,
+      stockCritico: 0,
+      stockNormal: 0,
+      categorias: 0 // Asegurar que categorías tenga valor por defecto
+    };
+
+    const total = stats.totalProductos || 1;
+    const porcentajes = {
+      sinStock: Math.round((stats.sinStock / total) * 100),
+      stockCritico: Math.round((stats.stockCritico / total) * 100),
+      stockNormal: Math.round((stats.stockNormal / total) * 100)
+    };
+
+    return (
+      <>
+        {/* Resumen General - MODIFICADO: Sin valor de inventario */}
+        <div className="row mb-4">
+          <div className="col-md-4">
+            <div className="card border-0 bg-light">
+              <div className="card-body text-center">
+                <h3 className="text-primary mb-1">{stats.totalProductos}</h3>
+                <small className="text-muted">TOTAL PRODUCTOS</small>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <div className="card border-0 bg-light">
+              <div className="card-body text-center">
+                <h3 className="text-warning mb-1">{stats.stockCritico}</h3>
+                <small className="text-muted">STOCK CRÍTICO</small>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <div className="card border-0 bg-light">
+              <div className="card-body text-center">
+                <h3 className="text-info mb-1">{stats.categorias || 0}</h3>
+                <small className="text-muted">CATEGORÍAS</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Distribución por Stock */}
+        <div className="mb-4">
+          <h6 className="fw-bold mb-3 border-bottom pb-2">
+            <i className="bi bi-box-seam me-2"></i>
+            Estado del Inventario
+          </h6>
+
+          <div className="row g-3">
+            {/* Sin Stock */}
+            <div className="col-md-4">
+              <div className="d-flex align-items-center p-3 border rounded bg-danger bg-opacity-10">
+                <div className="flex-shrink-0">
+                  <i className="bi bi-x-circle text-danger fs-4 me-3"></i>
+                </div>
+                <div className="flex-grow-1">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span className="fw-semibold">Sin Stock</span>
+                    <span className="badge bg-danger">{stats.sinStock}</span>
+                  </div>
+                  <small className="text-muted">{porcentajes.sinStock}% del total</small>
+                </div>
+              </div>
+            </div>
+
+            {/* Stock Crítico */}
+            <div className="col-md-4">
+              <div className="d-flex align-items-center p-3 border rounded bg-warning bg-opacity-10">
+                <div className="flex-shrink-0">
+                  <i className="bi bi-exclamation-triangle text-warning fs-4 me-3"></i>
+                </div>
+                <div className="flex-grow-1">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span className="fw-semibold">Stock Crítico</span>
+                    <span className="badge bg-warning text-dark">{stats.stockCritico}</span>
+                  </div>
+                  <small className="text-muted">{porcentajes.stockCritico}% del total</small>
+                </div>
+              </div>
+            </div>
+
+            {/* Stock Normal */}
+            <div className="col-md-4">
+              <div className="d-flex align-items-center p-3 border rounded bg-success bg-opacity-10">
+                <div className="flex-shrink-0">
+                  <i className="bi bi-check-circle text-success fs-4 me-3"></i>
+                </div>
+                <div className="flex-grow-1">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span className="fw-semibold">Stock Normal</span>
+                    <span className="badge bg-success">{stats.stockNormal}</span>
+                  </div>
+                  <small className="text-muted">{porcentajes.stockNormal}% del total</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
   };
-
-  const total = stats.totalProductos || 1;
-  const porcentajes = {
-    sinStock: Math.round((stats.sinStock / total) * 100),
-    stockCritico: Math.round((stats.stockCritico / total) * 100),
-    stockNormal: Math.round((stats.stockNormal / total) * 100)
-  };
-
-  return (
-    <>
-      {/* Resumen General - MODIFICADO: Sin valor de inventario */}
-      <div className="row mb-4">
-        <div className="col-md-4">
-          <div className="card border-0 bg-light">
-            <div className="card-body text-center">
-              <h3 className="text-primary mb-1">{stats.totalProductos}</h3>
-              <small className="text-muted">TOTAL PRODUCTOS</small>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-4">
-          <div className="card border-0 bg-light">
-            <div className="card-body text-center">
-              <h3 className="text-warning mb-1">{stats.stockCritico}</h3>
-              <small className="text-muted">STOCK CRÍTICO</small>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-4">
-          <div className="card border-0 bg-light">
-            <div className="card-body text-center">
-              <h3 className="text-info mb-1">{stats.categorias || 0}</h3>
-              <small className="text-muted">CATEGORÍAS</small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Distribución por Stock */}
-      <div className="mb-4">
-        <h6 className="fw-bold mb-3 border-bottom pb-2">
-          <i className="bi bi-box-seam me-2"></i>
-          Estado del Inventario
-        </h6>
-        
-        <div className="row g-3">
-          {/* Sin Stock */}
-          <div className="col-md-4">
-            <div className="d-flex align-items-center p-3 border rounded bg-danger bg-opacity-10">
-              <div className="flex-shrink-0">
-                <i className="bi bi-x-circle text-danger fs-4 me-3"></i>
-              </div>
-              <div className="flex-grow-1">
-                <div className="d-flex justify-content-between align-items-center">
-                  <span className="fw-semibold">Sin Stock</span>
-                  <span className="badge bg-danger">{stats.sinStock}</span>
-                </div>
-                <small className="text-muted">{porcentajes.sinStock}% del total</small>
-              </div>
-            </div>
-          </div>
-
-          {/* Stock Crítico */}
-          <div className="col-md-4">
-            <div className="d-flex align-items-center p-3 border rounded bg-warning bg-opacity-10">
-              <div className="flex-shrink-0">
-                <i className="bi bi-exclamation-triangle text-warning fs-4 me-3"></i>
-              </div>
-              <div className="flex-grow-1">
-                <div className="d-flex justify-content-between align-items-center">
-                  <span className="fw-semibold">Stock Crítico</span>
-                  <span className="badge bg-warning text-dark">{stats.stockCritico}</span>
-                </div>
-                <small className="text-muted">{porcentajes.stockCritico}% del total</small>
-              </div>
-            </div>
-          </div>
-
-          {/* Stock Normal */}
-          <div className="col-md-4">
-            <div className="d-flex align-items-center p-3 border rounded bg-success bg-opacity-10">
-              <div className="flex-shrink-0">
-                <i className="bi bi-check-circle text-success fs-4 me-3"></i>
-              </div>
-              <div className="flex-grow-1">
-                <div className="d-flex justify-content-between align-items-center">
-                  <span className="fw-semibold">Stock Normal</span>
-                  <span className="badge bg-success">{stats.stockNormal}</span>
-                </div>
-                <small className="text-muted">{porcentajes.stockNormal}% del total</small>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
 
   return (
     <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -394,7 +394,7 @@ const ReporteModal = ({
             </h5>
             <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
           </div>
-          
+
           <div className="modal-body">
             {renderContenido()}
 
@@ -404,51 +404,39 @@ const ReporteModal = ({
                 <i className="bi bi-download me-2"></i>
                 Seleccionar Formato de Descarga
               </h6>
-              
+
               <div className="row g-3">
                 <div className="col-md-6">
-                  <div 
-                    className="card h-100 border-success cursor-pointer hover-shadow"
+                  <div
+                    className="card h-100 border-primary cursor-pointer hover-shadow"
                     onClick={() => onSeleccionarFormato('csv')}
                     style={{ cursor: 'pointer', transition: 'all 0.2s' }}
                     onMouseEnter={(e) => e.currentTarget.classList.add('shadow-sm')}
                     onMouseLeave={(e) => e.currentTarget.classList.remove('shadow-sm')}
                   >
                     <div className="card-body text-center">
-                      <i className="bi bi-file-earmark-spreadsheet text-success fs-1 mb-2"></i>
-                      <h6 className="fw-bold text-success">CSV Estándar</h6>
+                      <i className="bi bi-file-earmark-spreadsheet text-primary fs-1 mb-2"></i>
+                      <h6 className="fw-bold text-primary">CSV Estándar</h6>
                       <small className="text-muted">
                         Formato universal compatible con cualquier software
-                      </small>
-                    </div>
-                    <div className="card-footer bg-transparent border-success">
-                      <small className="text-success">
-                        <i className="bi bi-check-circle me-1"></i>
-                        Tildes correctas
                       </small>
                     </div>
                   </div>
                 </div>
 
                 <div className="col-md-6">
-                  <div 
-                    className="card h-100 border-primary cursor-pointer hover-shadow"
+                  <div
+                    className="card h-100 border-success cursor-pointer hover-shadow"
                     onClick={() => onSeleccionarFormato('csv-excel')}
                     style={{ cursor: 'pointer', transition: 'all 0.2s' }}
                     onMouseEnter={(e) => e.currentTarget.classList.add('shadow-sm')}
                     onMouseLeave={(e) => e.currentTarget.classList.remove('shadow-sm')}
                   >
                     <div className="card-body text-center">
-                      <i className="bi bi-file-earmark-excel text-primary fs-1 mb-2"></i>
-                      <h6 className="fw-bold text-primary">CSV para Excel</h6>
+                      <i className="bi bi-file-earmark-excel text-success fs-1 mb-2"></i>
+                      <h6 className="fw-bold text-success">CSV para Excel</h6>
                       <small className="text-muted">
                         Optimizado específicamente para Microsoft Excel
-                      </small>
-                    </div>
-                    <div className="card-footer bg-transparent border-primary">
-                      <small className="text-primary">
-                        <i className="bi bi-star-fill me-1"></i>
-                        Mejor experiencia en Excel
                       </small>
                     </div>
                   </div>
@@ -462,7 +450,7 @@ const ReporteModal = ({
                     <small className="fw-bold">Recomendación:</small>
                     <br />
                     <small>
-                      Usa <strong>CSV Estándar</strong> para compatibilidad universal o 
+                      Usa <strong>CSV Estándar</strong> para compatibilidad universal o
                       <strong> CSV para Excel</strong> si trabajas principalmente con Microsoft Excel.
                     </small>
                   </div>
@@ -470,7 +458,7 @@ const ReporteModal = ({
               </div>
             </div>
           </div>
-          
+
           <div className="modal-footer">
             <button type="button" className="btn btn-outline-secondary" onClick={onClose}>
               <i className="bi bi-x-circle me-2"></i>

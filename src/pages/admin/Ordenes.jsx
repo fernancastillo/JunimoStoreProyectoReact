@@ -27,14 +27,18 @@ const Ordenes = () => {
 
   const [showReporteModal, setShowReporteModal] = useState(false);
 
-  const handleGenerarReporte = (formato) => {
-    if (formato === 'csv') {
-      setShowReporteModal(true);
-    } else {
-      // CORREGIDO: Usar el nuevo orden de parámetros
-      generarReporteOrdenes(formato, ordenesFiltradas);
-    }
-  };
+const handleGenerarReporte = (formato) => {
+  if (formato === 'csv') {
+    // Mostrar modal para que el usuario elija CSV o CSV Excel
+    setShowReporteModal(true);
+  } else if (formato === 'json') {
+    // Generar directamente el JSON
+    generarReporteOrdenes('json', ordenesFiltradas);
+  } else {
+    // Cualquier otro formato (por compatibilidad futura)
+    generarReporteOrdenes(formato, ordenesFiltradas);
+  }
+};
 
   const handleSeleccionFormato = (formato) => {
     // CORREGIDO: Usar el nuevo orden de parámetros

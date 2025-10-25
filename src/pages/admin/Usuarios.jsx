@@ -32,18 +32,27 @@ const Usuarios = () => {
 
   const [showReporteModal, setShowReporteModal] = useState(false);
 
-  const handleGenerarReporte = (formato) => {
-    if (formato === 'csv') {
-      setShowReporteModal(true);
-    } else {
-      generarReporteUsuarios(usuariosFiltrados, formato, estadisticas);
-    }
-  };
+ const handleGenerarReporte = (formato) => {
+// Si el usuario elige CSV, abre el modal para escoger tipo (CSV o CSV Excel)
+if (formato === 'csv') {
+setShowReporteModal(true);
+return;
+}
 
-  const handleSeleccionFormato = (formato) => {
-    generarReporteUsuarios(usuariosFiltrados, formato, estadisticas);
-    setShowReporteModal(false);
-  };
+// Si el usuario elige JSON, genera directamente el archivo
+if (formato === 'json') {
+generarReporteUsuarios('json', usuariosFiltrados, estadisticas);
+return;
+}
+
+// Otros formatos adicionales (por compatibilidad futura)
+generarReporteUsuarios(formato, usuariosFiltrados, estadisticas);
+};
+
+const handleSeleccionFormato = (formato) => {
+  generarReporteUsuarios(formato, usuariosFiltrados, estadisticas);
+  setShowReporteModal(false);
+};
 
   if (loading) {
     return (

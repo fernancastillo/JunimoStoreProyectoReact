@@ -425,7 +425,8 @@ export const generarReporteUsuarios = async (formato, usuariosParam = null, esta
  * Genera CSV estándar para usuarios
  */
 const generarCSVUsuarios = (usuarios) => {
-  const headers = ['RUN', 'Nombre', 'Apellidos', 'Email', 'Teléfono', 'Tipo', 'Estado', 'Total Compras', 'Total Gastado', 'Región', 'Comuna'];
+  const BOM = '\uFEFF';
+  const headers = ['RUN', 'Nombre', 'Apellidos', 'Email', 'Teléfono', 'Tipo', 'Total Compras', 'Total Gastado', 'Región', 'Comuna'];
   let csv = headers.join(',') + '\n';
 
   usuarios.forEach(usuario => {
@@ -436,7 +437,6 @@ const generarCSVUsuarios = (usuarios) => {
       `"${usuario.correo}"`,
       `"${usuario.telefono}"`,
       `"${usuario.tipo}"`,
-      `"${usuario.estado}"`,
       usuario.totalCompras || 0,
       usuario.totalGastado || 0,
       `"${usuario.region}"`,
@@ -445,14 +445,15 @@ const generarCSVUsuarios = (usuarios) => {
     csv += row.join(',') + '\n';
   });
 
-  return csv;
+  return BOM + csv;
 };
 
 /**
  * Genera CSV optimizado para Excel
  */
 const generarCSVUsuariosExcel = (usuarios) => {
-  const headers = ['RUN', 'Nombre', 'Apellidos', 'Email', 'Teléfono', 'Tipo', 'Estado', 'Total Compras', 'Total Gastado', 'Región', 'Comuna'];
+  const BOM = '\uFEFF'; 
+  const headers = ['RUN', 'Nombre', 'Apellidos', 'Email', 'Teléfono', 'Tipo', 'Total Compras', 'Total Gastado', 'Región', 'Comuna'];
   let csv = '\uFEFF' + headers.join(';') + '\n';
 
   usuarios.forEach(usuario => {
@@ -463,7 +464,6 @@ const generarCSVUsuariosExcel = (usuarios) => {
       usuario.correo,
       usuario.telefono,
       usuario.tipo,
-      usuario.estado,
       usuario.totalCompras || 0,
       (usuario.totalGastado || 0).toString().replace('.', ','),
       usuario.region,
@@ -472,7 +472,7 @@ const generarCSVUsuariosExcel = (usuarios) => {
     csv += row.join(';') + '\n';
   });
 
-  return csv;
+  return BOM + csv;
 };
 
 /**

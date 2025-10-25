@@ -221,7 +221,7 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
                 className="btn btn-success"
                 onClick={handleDescargarBoleta}
               >
-                <i className="bi bi-file-earmark-pdf me-2"></i>
+                <i className="bi bi-download me-2"></i>
                 Descargar Boleta
               </button>
               <button type="button" className="btn btn-secondary" onClick={onClose}>
