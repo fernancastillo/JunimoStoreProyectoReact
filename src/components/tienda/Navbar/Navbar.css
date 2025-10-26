@@ -1,0 +1,491 @@
+@import url('https://fonts.googleapis.com/css2?family=Indie+Flower&family=Lato:wght@300;400;700&display=swap');
+
+/* Navbar Base - EXACTO IGUAL */
+.custom-navbar {
+  border-bottom: 3px solid #dedd8f;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  font-family: 'Lato', sans-serif;
+  padding: 0.5rem 0;
+  background: linear-gradient(135deg, rgba(46, 139, 87, 0.85) 0%, rgba(67, 160, 71, 0.85) 100%), url('/img/fondostardew.png') center/cover;
+  background-blend-mode: overlay;
+}
+
+/* Logo - EXACTO IGUAL */
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo-image {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  filter: brightness(1.05);
+  animation: logoPulse 2s ease-in-out infinite;
+  border-radius: 20%;
+  background: transparent;
+}
+
+@keyframes logoPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+.logo-text {
+  font-family: 'Indie Flower', cursive;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  color: white;
+  background: linear-gradient(135deg, #ffffff, #f0f8f0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Menú Items - EXACTO IGUAL */
+.nav-menu-item {
+  color: white !important;
+  font-weight: 600;
+  padding: 0.75rem 1.25rem !important;
+  border-radius: 10px;
+  margin: 0 0.25rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid transparent;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.nav-menu-item:hover,
+.nav-menu-item:focus {
+  background: rgba(222, 221, 143, 0.4) !important;
+  border-color: rgba(222, 221, 143, 0.6) !important;
+  transform: translateY(-2px);
+  color: white !important;
+}
+
+.nav-menu-item.active {
+  background: rgba(135, 206, 235, 0.4) !important;
+  border-color: #87CEEB !important;
+  color: #000 !important;
+  text-shadow: none;
+}
+
+/* Hot Badge - EXACTO IGUAL */
+.hot-badge {
+  background: #ff6b6b;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-weight: 700;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Carrito - EXACTO IGUAL */
+.nav-action-btn {
+  background: rgba(222, 221, 143, 0.3) !important;
+  border: 2px solid rgba(222, 221, 143, 0.5) !important;
+  border-radius: 10px !important;
+  padding: 0.6rem !important;
+  width: 45px;
+  height: 45px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.nav-action-btn:hover {
+  background: rgba(222, 221, 143, 0.5) !important;
+  transform: translateY(-2px);
+}
+
+.action-icon {
+  font-size: 1.2rem;
+}
+
+.cart-count-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff4444;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  animation: pulse 2s infinite;
+}
+
+/* Botón Login - EXACTO IGUAL */
+.login-btn-large {
+  padding: 0 !important;
+  margin-left: 2rem !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.login-icon-large {
+  width: 230px;
+  height: 230px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  transition: all 0.3s ease;
+}
+
+.login-icon-large:hover {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+  transform: scale(1.05);
+}
+
+/* Perfil de Usuario - EXACTO IGUAL */
+.user-profile-btn {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: none !important;
+  border-radius: 20px !important;
+  padding: 8px 16px !important;
+  transition: all 0.3s ease;
+}
+
+.user-profile-btn:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #dedd8f;
+  object-fit: cover;
+}
+
+.user-avatar-large {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 3px solid white;
+  object-fit: cover;
+}
+
+.user-name {
+  color: white;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Dropdown Menu - EXACTO IGUAL */
+.user-dropdown-menu {
+  border-radius: 15px !important;
+  border: none !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+  overflow: hidden;
+  margin-top: 8px !important;
+}
+
+.user-info {
+  background: linear-gradient(135deg, #2E8B57, #3CB371);
+  color: white;
+  border-radius: 15px 15px 0 0;
+}
+
+.user-discount {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.dropdown-link {
+  display: flex !important;
+  align-items: center;
+  padding: 12px 16px !important;
+  color: #2E8B57 !important;
+  transition: all 0.3s ease;
+}
+
+.dropdown-link:hover {
+  background: #f8f9fa !important;
+  color: #2E8B57 !important;
+  padding-left: 20px !important;
+}
+
+.logout-btn {
+  color: #dc3545 !important;
+  font-weight: 600;
+}
+
+.logout-btn:hover {
+  background: #dc3545 !important;
+  color: white !important;
+}
+
+/* Toggler Personalizado - EXACTO IGUAL */
+.custom-toggler {
+  border: 2px solid rgba(222, 221, 143, 0.5) !important;
+  background: rgba(222, 221, 143, 0.2) !important;
+}
+
+.custom-toggler .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='white' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+/* MEJORAS RESPONSIVE - EXACTO IGUAL */
+@media (max-width: 1400px) {
+  .container-fluid-xxl {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (max-width: 1200px) {
+  .nav-menu-item {
+    padding: 0.6rem 1rem !important;
+    font-size: 0.9rem;
+  }
+  
+  .logo-image {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .logo-text {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .nav-menu-item {
+    margin: 0.5rem 0;
+    text-align: center;
+    width: 100%;
+  }
+  
+  .login-btn-large {
+    margin-left: 0 !important;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .login-icon-large {
+    width: 180px;
+    height: 180px;
+  }
+  
+  .logo-image {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .logo-text {
+    font-size: 1.4rem;
+  }
+  
+  .nav-action-btn {
+    margin-right: 1rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .logo-image {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .logo-text {
+    font-size: 1.3rem;
+  }
+  
+  .login-icon-large {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .user-name {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .logo-text {
+    display: none;
+  }
+  
+  .user-name {
+    display: none;
+  }
+  
+  .login-icon-large {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .logo-image {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .nav-action-btn {
+    width: 40px;
+    height: 40px;
+    margin-right: 0.5rem !important;
+  }
+  
+  .action-icon {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .login-icon-large {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .logo-image {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .nav-menu-item {
+    padding: 0.5rem 0.8rem !important;
+    font-size: 0.85rem;
+  }
+}
+
+/* ESTILOS ADICIONALES PARA EL PROBLEMA DEL DROPDOWN Y RESPONSIVE */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Asegurar que el navbar collapse se vea bien en móviles */
+.navbar-collapse {
+  transition: all 0.3s ease;
+}
+
+/* Para el dropdown en móviles */
+@media (max-width: 992px) {
+  .user-dropdown-menu {
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+    margin-top: 0.5rem !important;
+  }
+  
+  .dropdown-toggle::after {
+    display: none !important;
+  }
+}
+
+/* Asegurar que los enlaces del dropdown funcionen */
+.dropdown-link {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.dropdown-link:hover {
+  text-decoration: none;
+}
+
+/* Fix para el navbar en móviles - eliminar márgenes blancos */
+.navbar-collapse.show {
+  
+  border-radius: 0 0 15px 15px;
+  margin: 0.5rem -1rem -0.5rem -1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Asegurar que el toggler funcione correctamente */
+.navbar-toggler:focus {
+  box-shadow: 0 0 0 0.2rem rgba(222, 221, 143, 0.5) !important;
+}
+
+
+/* FIX CRÍTICO PARA EL DROPDOWN - NO SE VEA CORTADO */
+.user-dropdown-menu {
+  z-index: 9999 !important; /* Máxima prioridad */
+  position: absolute !important;
+  transform: translate3d(0px, 38px, 0px) !important; /* Posición fija */
+  top: 0px !important;
+  left: 0px !important;
+  will-change: transform !important;
+  margin-top: 0.5rem !important;
+}
+
+/* Asegurar que el navbar tenga un z-index alto */
+.custom-navbar {
+  z-index: 10000 !important;
+  position: relative !important;
+}
+
+/* Fix para el contenedor del dropdown */
+.dropdown {
+  position: relative !important;
+}
+
+.dropdown-menu.show {
+  display: block !important;
+  position: absolute !important;
+  inset: 0px auto auto 0px !important;
+  margin: 0px !important;
+  transform: translate3d(-120px, 38px, 0px) !important;
+}
+
+/* Para móviles - dropdown completo */
+@media (max-width: 992px) {
+  .user-dropdown-menu {
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+    margin-top: 0.5rem !important;
+  }
+  
+  .dropdown-menu.show {
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+  }
+}
+
+/* Eliminar cualquier overflow que corte el dropdown */
+.navbar-collapse {
+  overflow: visible !important;
+}
+
+.custom-navbar {
+  overflow: visible !important;
+}
+
+/* Asegurar que el body no corte contenido */
+body {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+/* Estilo para la imagen del pollo en el dropdown */
+.dropdown-link .dropdown-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #dedd8f;
+}
+
+/* Asegurar que el texto se alinee verticalmente */
+.dropdown-link {
+  display: flex !important;
+  align-items: center !important;
+  padding: 12px 16px !important;
+}

@@ -1,15 +1,26 @@
-// App.jsx - importación corregida
 import { Routes, Route, Navigate } from 'react-router-dom'
-import Navbar from './components/tienda/Navbar'
+import Navbar from './components/tienda/Navbar/Navbar'
+import Footer from './components/tienda/Footer/Footer'
 import Index from './pages/tienda/Index'
 import Login from './pages/tienda/Login'
+import RegistroUsuario from './pages/tienda/RegistroUsuario'
 import Dashboard from './pages/admin/Dashboard'
 import Ordenes from './pages/admin/Ordenes'
 import Productos from './pages/admin/Productos'
 import Usuarios from './pages/admin/Usuarios'
 import Perfil from './pages/admin/Perfil'
+import ProductoDetalle from './pages/tienda/productoDetalle'
+import TiendaProductos from './pages/tienda/Productos'
+import Nosotros from './pages/tienda/Nosotros'
+import Contacto from './pages/tienda/Contacto'
+import Blogs from './pages/tienda/blogs'
+import Ofertas from './pages/tienda/ofertas'
+import Carrito from './pages/tienda/Carrito'
 import AdminSidebar, { AdminMobileNavbar } from './components/admin/AdminSidebar'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute' 
+import Pedidos from './pages/tienda/Pedidos' 
+import PerfilUsuario from './pages/tienda/PerfilUsuario'
+import UserProtectedRoute from './components/UserProtectedRoute'
 
 function App() {
   return (
@@ -36,6 +47,7 @@ function App() {
                       <Route path='/usuarios' element={<Usuarios/>} />
                       <Route path='/perfil' element={<Perfil/>} />
                       <Route path='/' element={<Navigate to="/admin/dashboard" replace />} />
+                      <Route path='*' element={<Navigate to="/admin/dashboard" replace />} />
                     </Routes>
                   </div>
                 </div>
@@ -49,20 +61,39 @@ function App() {
           <div className="d-flex flex-column min-vh-100">
             <Navbar />
             <main className="flex-grow-1">
-              <div className="container-fluid mt-4">
-                <Routes>
-                  <Route path='/index' element={<Index/>} />
-                  <Route path='/productos' element={<Index/>} />
-                  <Route path='/carrito' element={<Index/>} />
-                  <Route path='/blogs' element={<Index/>} />
-                  <Route path='/nosotros' element={<Index/>} />
-                  <Route path='/contacto' element={<Index/>} />
-                  <Route path='/ofertas' element={<Index/>} />
-                  <Route path='/login' element={<Login/>} />
-                  <Route path='/' element={<Navigate to="/index" replace />} />
-                </Routes>
-              </div>
+              <Routes>
+                {/* Rutas públicas principales */}
+                <Route path='/index' element={<Index/>} />
+                <Route path='/productos' element={<TiendaProductos/>} />
+                <Route path="/producto/:codigo" element={<ProductoDetalle />} />
+                <Route path='/carrito' element={<Carrito/>} />
+                <Route path='/blogs' element={<Blogs/>} />
+                <Route path='/nosotros' element={<Nosotros/>} />
+                <Route path='/contacto' element={<Contacto/>} />
+                <Route path='/ofertas' element={<Ofertas/>} />
+                <Route path='/login' element={<Login/>} />
+                <Route path='/registro' element={<RegistroUsuario/>} />
+                
+                {/* Rutas protegidas para usuarios logueados */}
+                <Route path='/pedidos' element={
+                  <UserProtectedRoute>
+                    <Pedidos/>
+                  </UserProtectedRoute>
+                } />
+                <Route path='/perfil' element={
+                  <UserProtectedRoute>
+                    <PerfilUsuario/>
+                  </UserProtectedRoute>
+                } />
+                
+                {/* Redirecciones y catch-all */}
+                <Route path='/' element={<Navigate to="/index" replace />} />
+                <Route path='/home' element={<Navigate to="/index" replace />} />
+                <Route path='/tienda' element={<Navigate to="/productos" replace />} />
+                <Route path='*' element={<Navigate to="/index" replace />} />
+              </Routes>
             </main>
+            <Footer />
           </div>
         } />
       </Routes>
