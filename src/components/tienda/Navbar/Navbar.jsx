@@ -22,41 +22,53 @@ const CustomNavbar = () => {
     { id: 'contacto', label: 'Contacto', path: '/contacto' }
   ];
 
+  // Función consistente con UserProtectedRoute
+  const getCurrentUserData = () => {
+    try {
+      const authUser = localStorage.getItem('auth_user');
+      if (authUser) return JSON.parse(authUser);
+      
+      const currentUser = localStorage.getItem('currentUser');
+      if (currentUser) return JSON.parse(currentUser);
+      
+      return null;
+    } catch (error) {
+      console.error('Error al obtener usuario:', error);
+      return null;
+    }
+  };
+
   const getCartItemCount = () => {
-    const savedCart = localStorage.getItem('junimoCart');
-    if (savedCart) {
-      const cartItems = JSON.parse(savedCart);
-      return cartItems.reduce((total, item) => total + item.cantidad, 0);
+    try {
+      const savedCart = localStorage.getItem('junimoCart');
+      if (savedCart) {
+        const cartItems = JSON.parse(savedCart);
+        return cartItems.reduce((total, item) => total + (item.cantidad || 0), 0);
+      }
+    } catch (error) {
+      console.error('Error al obtener carrito:', error);
     }
     return 0;
   };
 
-  useEffect(() => {
-    const user = authService.getCurrentUser();
-    setCurrentUser(user);
+  const updateCartCount = () => {
     setCartItemCount(getCartItemCount());
+  };
+
+  useEffect(() => {
+    const user = getCurrentUserData();
+    console.log('🔄 Navbar - Usuario detectado:', user);
+    setCurrentUser(user);
+    updateCartCount();
   }, [location]);
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      setCartItemCount(getCartItemCount());
+    const handleCartUpdate = () => {
+      updateCartCount();
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('cartUpdated', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('cartUpdated', handleStorageChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCartItemCount(getCartItemCount());
-    }, 1000);
-
-    return () => clearInterval(interval);
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
   }, []);
 
   const handleLogout = () => {
@@ -65,13 +77,12 @@ const CustomNavbar = () => {
     navigate('/index');
   };
 
-  const navbarStyle = {
-    background: `linear-gradient(135deg, rgba(46, 139, 87, 0.85) 0%, rgba(67, 160, 71, 0.85) 100%), url('/img/fondostardew.png') center/cover`,
-    backgroundBlendMode: 'overlay'
+  const handleDropdownClick = (path) => {
+    navigate(path);
   };
 
   return (
-    <Navbar expand="lg" className="custom-navbar" style={navbarStyle} fixed="top">
+    <Navbar expand="lg" className="custom-navbar" fixed="top">
       <Container fluid="xxl">
         <Navbar.Brand as={Link} to="/index" className="d-flex align-items-center">
           <div className="logo-container me-2">
@@ -98,7 +109,6 @@ const CustomNavbar = () => {
           </Nav>
 
           <Nav className="align-items-center">
-            {/* Carrito con contador actualizado */}
             <Nav.Link as={Link} to="/carrito" className="nav-action-btn position-relative me-3">
               <span className="action-icon">🛒</span>
               {cartItemCount > 0 && (
@@ -110,7 +120,11 @@ const CustomNavbar = () => {
 
             {currentUser ? (
               <Dropdown align="end">
-                <Dropdown.Toggle as="div" className="user-profile-btn cursor-pointer">
+                <Dropdown.Toggle 
+                  as="div" 
+                  className="user-profile-btn cursor-pointer"
+                  style={{ background: 'none', border: 'none' }}
+                >
                   <div className="d-flex align-items-center">
                     <img src={polloPerfil} alt="Perfil" className="user-avatar me-2" />
                     <span className="user-name d-none d-md-block">{currentUser.nombre}</span>
@@ -122,23 +136,43 @@ const CustomNavbar = () => {
                     <img src={polloPerfil} alt="Perfil" className="user-avatar-large me-3" />
                     <div className="user-details">
                       <strong>{currentUser.nombre} {currentUser.apellido}</strong>
-                      <span className="d-block">{currentUser.email}</span>
+                      <span className="d-block text-muted small">{currentUser.email}</span>
                       {currentUser.descuento && currentUser.descuento !== '0%' && (
-                        <span className="user-discount">🎓 {currentUser.descuento} descuento</span>
+                        <span className="user-discount badge bg-warning text-dark mt-1">
+                          🎓 {currentUser.descuento} descuento
+                        </span>
                       )}
                     </div>
                   </div>
                   
-                  <Dropdown.Item as={Link} to="/perfil" className="dropdown-link">
-                    <span className="dropdown-icon me-2">👤</span>
+                  <Dropdown.Item 
+                    onClick={() => handleDropdownClick('/perfil')}
+                    className="dropdown-link"
+                  >
+                    {/* CAMBIO: Imagen del pollo en lugar de emoji 👤 */}
+                    <img 
+                      src={polloPerfil} 
+                      alt="Perfil" 
+                      className="dropdown-icon me-2"
+                      style={{ width: '20px', height: '20px', objectFit: 'cover' }}
+                    />
                     Mi Perfil
                   </Dropdown.Item>
-                  <Dropdown.Item as={Link} to="/pedidos" className="dropdown-link">
+                  
+                  <Dropdown.Item 
+                    onClick={() => handleDropdownClick('/pedidos')}
+                    className="dropdown-link"
+                  >
                     <span className="dropdown-icon me-2">📦</span>
                     Mis Pedidos
                   </Dropdown.Item>
+                  
                   <Dropdown.Divider />
-                  <Dropdown.Item onClick={handleLogout} className="dropdown-link logout-btn">
+                  
+                  <Dropdown.Item 
+                    onClick={handleLogout}
+                    className="dropdown-link logout-btn"
+                  >
                     <span className="dropdown-icon me-2">🚪</span>
                     Cerrar Sesión
                   </Dropdown.Item>

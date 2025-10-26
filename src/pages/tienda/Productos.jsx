@@ -106,8 +106,8 @@ const Productos = () => {
       )}
 
       <Container fluid className="py-4">
-        {/* IMAGEN DE CATEGORÍAS GRANDE */}
-        <Row className="mb-3">
+        {/* IMAGEN DE CATEGORÍAS GRANDE - CON MARGIN TOP */}
+        <Row className="mb-4 mt-3">
           <Col>
             <div className="text-center">
               <img 

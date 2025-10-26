@@ -3,64 +3,74 @@ import { Container, Row, Col, Card, Button, Badge, Alert } from 'react-bootstrap
 import { Link } from 'react-router-dom';
 import './Ofertas.css';
 
+// Importar las imágenes desde assets
+import pelucheKrobus from '../../assets/tienda/peluche-krobus.webp';
+import posterGranja from '../../assets/tienda/poster-granja-stardew.avif';
+import poleraPersonalizada from '../../assets/tienda/polera-stardew-personalizada.webp';
+import almohadaPollo from '../../assets/tienda/almohada-pollo-stardew.png';
+
 const Ofertas = () => {
   const [ofertas, setOfertas] = useState([]);
   const [showAlert, setShowAlert] = useState(false);
   const [alertProduct, setAlertProduct] = useState(null);
 
-  // Simular datos de ofertas (en una app real vendrían de una API)
+  // Datos de ofertas con imágenes importadas
   useEffect(() => {
     const ofertasData = [
       {
         id: 1,
-        nombre: "Pack Completo Stardew Valley",
-        descripcion: "Incluye guía física, peluche Junimo y mapa del valle. ¡Todo lo que necesitas para comenzar!",
-        precioOriginal: 45000,
-        precioOferta: 34990,
-        descuento: 22,
-        imagen: "https://via.placeholder.com/400x300/2E8B57/FFFFFF?text=Pack+Completo",
-        categoria: "Packs",
-        stock: 15,
-        tiempoRestante: "3d 12h 30m",
-        exclusivo: true
-      },
-      {
-        id: 2,
-        nombre: "Peluche Junimo Gigante",
-        descripcion: "Peluche extra grande de 40cm del adorable Junimo. ¡Edición limitada!",
-        precioOriginal: 29990,
-        precioOferta: 19990,
-        descuento: 33,
-        imagen: "https://via.placeholder.com/400x300/FFD700/000000?text=Junimo+Gigante",
+        codigo: "PE001",
+        nombre: "Peluche De Krobus",
+        descripcion: "Suave y adorable peluche de Krobus, ideal para fans y coleccionistas. ¡Últimas unidades!",
+        precioOriginal: 24990,
+        precioOferta: 499,
+        descuento: 98,
+        imagen: pelucheKrobus,
         categoria: "Peluches",
-        stock: 8,
+        stock: 3,
         tiempoRestante: "1d 6h 15m",
         exclusivo: true
       },
       {
-        id: 3,
-        nombre: "Guía Estratégica Premium",
-        descripcion: "Guía completa con todos los secretos, mapas y estrategias avanzadas.",
-        precioOriginal: 24990,
-        precioOferta: 17990,
-        descuento: 28,
-        imagen: "https://via.placeholder.com/400x300/87CEEB/FFFFFF?text=Guía+Premium",
-        categoria: "Guías",
-        stock: 20,
-        tiempoRestante: "5d 18h 45m",
+        id: 2,
+        codigo: "DE001",
+        nombre: "Póster Stardew Valley (Edición Granja)",
+        descripcion: "Póster decorativo de alta calidad con diseño inspirado en la granja de Stardew Valley. ¡Edición especial!",
+        precioOriginal: 18990,
+        precioOferta: 399,
+        descuento: 98,
+        imagen: posterGranja,
+        categoria: "Decoración",
+        stock: 9,
+        tiempoRestante: "2d 4h 20m",
         exclusivo: false
       },
       {
-        id: 4,
-        nombre: "Set de Accesorios Mineros",
-        descripcion: "Incluye pico decorativo, casco y lámpara de minero. Perfecto para fans de las minas.",
-        precioOriginal: 35990,
-        precioOferta: 27990,
-        descuento: 22,
-        imagen: "https://via.placeholder.com/400x300/8B4513/FFFFFF?text=Set+Minería",
-        categoria: "Accesorios",
+        id: 3,
+        codigo: "PP001",
+        nombre: "Polera Stardew Valley Personalizada (Edición Limitada)",
+        descripcion: "Polera de edición limitada con diseño personalizado inspirado en Stardew Valley. ¡No te quedes sin la tuya!",
+        precioOriginal: 14990,
+        precioOferta: 299,
+        descuento: 98,
+        imagen: poleraPersonalizada,
+        categoria: "Polera Personalizada",
         stock: 12,
-        tiempoRestante: "2d 4h 20m",
+        tiempoRestante: "3d 12h 30m",
+        exclusivo: true
+      },
+      {
+        id: 4,
+        codigo: "DE002",
+        nombre: "Almohada Pollo De Stardew Valley",
+        descripcion: "Almohada decorativa con forma del icónico pollo de Stardew Valley. ¡Perfecta para tu habitación!",
+        precioOriginal: 19990,
+        precioOferta: 450,
+        descuento: 98,
+        imagen: almohadaPollo,
+        categoria: "Decoración",
+        stock: 29,
+        tiempoRestante: "5d 18h 45m",
         exclusivo: false
       }
     ];
@@ -68,32 +78,36 @@ const Ofertas = () => {
   }, []);
 
   const handleAddToCart = (producto) => {
-    const savedCart = localStorage.getItem('junimoCart');
-    let cartItems = savedCart ? JSON.parse(savedCart) : [];
-    
-    const existingItem = cartItems.find(item => item.id === producto.id);
-    
-    let newCartItems;
-    if (existingItem) {
-      newCartItems = cartItems.map(item =>
-        item.id === producto.id
-          ? { ...item, cantidad: item.cantidad + 1 }
-          : item
-      );
-    } else {
-      newCartItems = [...cartItems, { 
-        ...producto, 
-        cantidad: 1,
-        precio: producto.precioOferta // Usar precio de oferta en el carrito
-      }];
-    }
+    try {
+      const savedCart = localStorage.getItem('junimoCart');
+      let cartItems = savedCart ? JSON.parse(savedCart) : [];
+      
+      const existingItem = cartItems.find(item => item.codigo === producto.codigo);
+      
+      let newCartItems;
+      if (existingItem) {
+        newCartItems = cartItems.map(item =>
+          item.codigo === producto.codigo
+            ? { ...item, cantidad: item.cantidad + 1 }
+            : item
+        );
+      } else {
+        newCartItems = [...cartItems, { 
+          ...producto, 
+          cantidad: 1,
+          precio: producto.precioOferta
+        }];
+      }
 
-    localStorage.setItem('junimoCart', JSON.stringify(newCartItems));
-    window.dispatchEvent(new Event('cartUpdated'));
-    
-    setAlertProduct(producto);
-    setShowAlert(true);
-    setTimeout(() => setShowAlert(false), 3000);
+      localStorage.setItem('junimoCart', JSON.stringify(newCartItems));
+      window.dispatchEvent(new Event('cartUpdated'));
+      
+      setAlertProduct(producto);
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
+    } catch (error) {
+      console.error('Error al agregar al carrito:', error);
+    }
   };
 
   const formatearPrecio = (precio) => {
@@ -106,10 +120,8 @@ const Ofertas = () => {
 
   return (
     <div className="ofertas-page">
-      {/* ESPACIO PARA EL NAVBAR FIXED */}
       <div className="navbar-spacer"></div>
 
-      {/* Alert de producto agregado */}
       {showAlert && alertProduct && (
         <Alert variant="success" className="position-fixed top-0 end-0 m-3" style={{ zIndex: 1050 }}>
           ¡{alertProduct.nombre} agregado al carrito por {formatearPrecio(alertProduct.precioOferta)}!
@@ -117,7 +129,6 @@ const Ofertas = () => {
       )}
 
       <Container className="py-5">
-        {/* HEADER PRINCIPAL */}
         <Row className="mb-5">
           <Col>
             <div className="text-center">
@@ -132,7 +143,6 @@ const Ofertas = () => {
           </Col>
         </Row>
 
-        {/* CONTADOR DE OFERTAS */}
         <Row className="mb-4">
           <Col>
             <Card className="ofertas-info-card">
@@ -147,7 +157,7 @@ const Ofertas = () => {
                   </Col>
                   <Col md={4}>
                     <div className="ofertas-stats">
-                      <h3>Hasta 33%</h3>
+                      <h3>Hasta 21%</h3>
                       <p>Descuento</p>
                     </div>
                   </Col>
@@ -163,12 +173,10 @@ const Ofertas = () => {
           </Col>
         </Row>
 
-        {/* LISTA DE OFERTAS */}
         <Row>
           {ofertas.map(oferta => (
             <Col key={oferta.id} xl={3} lg={4} md={6} className="mb-4">
               <Card className="oferta-card h-100">
-                {/* Badge de oferta */}
                 <div className="oferta-badge-container">
                   <Badge bg="danger" className="oferta-descuento-badge">
                     -{oferta.descuento}%
@@ -187,8 +195,15 @@ const Ofertas = () => {
                   variant="top" 
                   src={oferta.imagen} 
                   className="oferta-imagen"
+                  alt={oferta.nombre}
                   onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/400x300/2E8B57/FFFFFF?text=Oferta+Especial';
+                    e.target.style.backgroundColor = '#f8f9fa';
+                    e.target.style.display = 'flex';
+                    e.target.style.alignItems = 'center';
+                    e.target.style.justifyContent = 'center';
+                    e.target.style.color = '#666';
+                    e.target.style.fontSize = '0.8rem';
+                    e.target.innerHTML = '🖼️ Imagen no disponible';
                   }}
                 />
                 
@@ -206,7 +221,6 @@ const Ofertas = () => {
                   </Card.Text>
                   
                   <div className="mt-auto">
-                    {/* Precios */}
                     <div className="oferta-precios mb-2">
                       <div className="precio-original text-muted text-decoration-line-through">
                         {formatearPrecio(oferta.precioOriginal)}
@@ -219,14 +233,12 @@ const Ofertas = () => {
                       </div>
                     </div>
 
-                    {/* Stock */}
                     <div className="oferta-stock mb-2">
                       <small className="text-muted">
                         📦 {oferta.stock} unidades disponibles
                       </small>
                     </div>
 
-                    {/* Botones */}
                     <div className="d-grid gap-2">
                       <Button 
                         variant="warning" 
@@ -241,7 +253,7 @@ const Ofertas = () => {
                         variant="outline-primary" 
                         size="sm"
                         as={Link}
-                        to={`/producto/${oferta.id}`}
+                        to={`/producto/${oferta.codigo}`}
                         className="oferta-btn-detalles"
                       >
                         👁️ Ver Detalles
@@ -254,32 +266,6 @@ const Ofertas = () => {
           ))}
         </Row>
 
-        {/* NEWSLETTER OFERTAS */}
-        <Row className="mt-5">
-          <Col lg={8} className="mx-auto">
-            <Card className="ofertas-newsletter-card">
-              <Card.Body className="p-4 text-center">
-                <h3 className="ofertas-titulo-seccion">💌 Sé el Primero en Enterarte</h3>
-                <p className="ofertas-texto">
-                  Suscríbete y recibe alertas exclusivas de ofertas antes que nadie. 
-                  <strong> ¡Plus: 10% de descuento en tu primera compra!</strong>
-                </p>
-                <div className="d-flex gap-2 justify-content-center">
-                  <input 
-                    type="email" 
-                    placeholder="tu@email.com"
-                    className="ofertas-newsletter-input"
-                  />
-                  <Button className="ofertas-btn-suscribir">
-                    Suscribirme a Ofertas
-                  </Button>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-
-        
         <Row className="mt-4">
           <Col className="text-center">
             <Link to="/productos" className="btn btn-outline-warning btn-lg">
