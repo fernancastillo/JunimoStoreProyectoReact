@@ -1,5 +1,5 @@
 # JUNIMOS STORE
-![Logo](/src/assets/tienda/junimoshop.png)
+![Logo](src/assets/tienda/junimoshop.png)
 
 ## Descripción
 **Junimos Store** es una tienda online dedicada a la comunidad de jugadores del popular juego indie Stardew Valley. Lanzada como iniciativa de fanáticos, ofrece productos temáticos inspirados en la vida en el valle, tales como merchandising, guías ilustradas, accesorios, ropa personalizada y servicios digitales como mods y paquetes de recursos. Aunque no cuenta con una ubicación física, realiza despachos a todo el país y busca ser un espacio de encuentro y comunidad para los jugadores.
