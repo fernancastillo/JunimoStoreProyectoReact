@@ -4,7 +4,7 @@ import { Navbar, Nav, Container, Dropdown, Modal, Button } from 'react-bootstrap
 import { authService } from '../../../utils/tienda/authService';
 import junimoLogo from '../../../assets/tienda/junimoss.png';
 import polloPerfil from '../../../assets/tienda/polloperfil.png';
-import './navbar.css';
+import './Navbar.css';
 
 const CustomNavbar = () => {
   const [currentUser, setCurrentUser] = useState(null);
