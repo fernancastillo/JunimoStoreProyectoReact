@@ -174,6 +174,10 @@ export const useProductos = () => {
   const [editingProducto, setEditingProducto] = useState(null);
   const [showModal, setShowModal] = useState(false);
   
+  // Estado para el mensaje de éxito
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
   // Estado para filtros
   const [filtros, setFiltros] = useState({
     codigo: '',
@@ -310,6 +314,12 @@ export const useProductos = () => {
     });
   };
 
+  //Función para limpiar el mensaje de éxito
+  const clearSuccessMessage = () => {
+    setShowSuccessMessage(false);
+    setSuccessMessage('');
+  };
+
   const handleCreate = (productoData) => {
     try {
       // Si es una nueva categoría, guardarla
@@ -331,6 +341,16 @@ export const useProductos = () => {
       dataService.addProducto(productoData);
       loadProductos();
       setShowModal(false);
+      
+      //Mostrar mensaje de éxito
+      setSuccessMessage('¡Producto agregado con éxito!');
+      setShowSuccessMessage(true);
+      
+      // Ocultar automáticamente después de 3 segundos
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
+      
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
@@ -349,6 +369,15 @@ export const useProductos = () => {
       loadProductos();
       setShowModal(false);
       setEditingProducto(null);
+      
+   
+      setSuccessMessage('¡Producto actualizado con éxito!');
+      setShowSuccessMessage(true);
+      
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
+      
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
@@ -393,6 +422,9 @@ export const useProductos = () => {
     editingProducto,
     showModal,
     filtros,
+    successMessage,
+    showSuccessMessage,
+    clearSuccessMessage,
     handleCreate,
     handleUpdate,
     handleDelete,

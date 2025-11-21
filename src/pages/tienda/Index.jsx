@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Badge, Spinner, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import productosData from '../../data/productos.json';
 import ProductCard from '../../components/tienda/ProductCard';
 import Filters from '../../components/tienda/Filters';
 import { authService } from '../../utils/tienda/authService';
-import { getProductosConStockActual, verificarStockDisponible } from '../../utils/tienda/stockService';
-import { getProductosConOfertas, getProductosEnOferta } from '../../utils/tienda/ofertasService';
+import { cartService } from '../../utils/tienda/cartService';
+import { ofertasConfig } from '../../utils/tienda/ofertasData';
 import { dataService } from '../../utils/dataService';
 
 const Index = () => {
@@ -18,53 +17,123 @@ const Index = () => {
   const [ofertasCount, setOfertasCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [isAddingToCart, setIsAddingToCart] = useState({});
 
   const navigate = useNavigate();
 
-  // Función para cargar productos con manejo de errores
-  const loadProductsWithStockAndOffers = () => {
+  const contarProductosEnOferta = (productos) => {
+    return productos.filter(producto => producto.enOferta).length;
+  };
+
+  const calcularStockDisponible = (producto, carritoActual) => {
+    const itemEnCarrito = carritoActual.find(item => item.codigo === producto.codigo);
+    const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
+    const stockBase = producto.stock || producto.stockActual || 0;
+    
+    return Math.max(0, stockBase - cantidadEnCarrito);
+  };
+
+  const adaptarProductosDesdeBD = (productosBD) => {
+    const carritoActual = cartService.getCart();
+    
+    return productosBD.map(producto => {
+      let categoriaNombre = producto.categoria;
+      if (typeof producto.categoria === 'object' && producto.categoria !== null) {
+        categoriaNombre = producto.categoria.nombre || producto.categoria.name || 'Sin categoría';
+      }
+
+      const stock = producto.stock || producto.stockActual || 0;
+      const stockCritico = producto.stock_critico || producto.stockCritico || 5;
+      const stockDisponible = calcularStockDisponible(producto, carritoActual);
+
+      let imagen = producto.imagen || producto.img || producto.url_imagen;
+      if (!imagen) {
+        imagen = '/src/assets/placeholder-producto.png';
+      }
+
+      return {
+        ...producto,
+        imagen: imagen,
+        categoria: categoriaNombre,
+        stock: stock,
+        stock_critico: stockCritico,
+        stock_disponible: stockDisponible,
+        enOferta: false,
+        precioOferta: null,
+        descuento: 0
+      };
+    });
+  };
+
+  const aplicarOfertasConfiguradas = (productos) => {
+    return productos.map(producto => {
+      const ofertaConfig = ofertasConfig.find(oferta => 
+        oferta.codigo === producto.codigo
+      );
+      
+      if (ofertaConfig) {
+        const precioOferta = Math.round(producto.precio * (1 - ofertaConfig.descuento / 100));
+        
+        return {
+          ...producto,
+          precioOriginal: producto.precio,
+          precioOferta: precioOferta,
+          descuento: ofertaConfig.descuento,
+          tiempoRestante: ofertaConfig.tiempoRestante,
+          exclusivo: ofertaConfig.exclusivo,
+          enOferta: true
+        };
+      }
+      
+      return producto;
+    });
+  };
+
+  const loadProductsWithStockAndOffers = async () => {
     try {
       setLoading(true);
       setError(null);
       
+      const productosDesdeBD = await dataService.getProductos();
       
-      // Verificar que los productos existan en localStorage
-      const productosEnStorage = dataService.getProductos();
-      
-      if (!productosEnStorage || productosEnStorage.length === 0) {
-        const errorMsg = 'No se encontraron productos en el sistema.';
-        console.error('❌', errorMsg);
+      if (!productosDesdeBD || productosDesdeBD.length === 0) {
+        const errorMsg = 'No se encontraron productos en la base de datos.';
         setError(errorMsg);
         setProducts([]);
         setFilteredProducts([]);
         return;
       }
       
-      // Obtener productos con stock real considerando el carrito
-      const productosConStock = getProductosConStockActual();
+      const productosAdaptados = adaptarProductosDesdeBD(productosDesdeBD);
+      const productosParaMostrar = aplicarOfertasConfiguradas(productosAdaptados);
       
-      if (productosConStock.length === 0) {
-        console.warn('⚠️ No hay productos con stock disponible');
+      const productosOferta = contarProductosEnOferta(productosParaMostrar);
+      setOfertasCount(productosOferta);
+      
+      setProducts(productosParaMostrar);
+      setFilteredProducts(productosParaMostrar);
+      
+      try {
+        const categoriasBD = await dataService.getCategorias();
+        
+        const nombresCategorias = categoriasBD.map(cat => {
+          if (typeof cat === 'object' && cat !== null) {
+            return cat.nombre || cat.name || String(cat);
+          }
+          return String(cat);
+        });
+        
+        const uniqueCategories = ['all', ...new Set(nombresCategorias)];
+        setCategories(uniqueCategories);
+      } catch (catError) {
+        const categoriasProductos = productosAdaptados.map(product => product.categoria);
+        const uniqueCategories = ['all', ...new Set(categoriasProductos)];
+        setCategories(uniqueCategories);
       }
       
-      // ✅ APLICAR OFERTAS a los productos
-      const productosConOfertas = getProductosConOfertas();
-      
-      // Combinar stock actualizado con ofertas
-      const productosFinales = productosConStock.map(productoStock => {
-        const productoConOferta = productosConOfertas.find(p => p.codigo === productoStock.codigo);
-        return productoConOferta || productoStock;
-      });
-      
-      setProducts(productosFinales);
-      setFilteredProducts(productosFinales);
-      
-      // ✅ CONTAR PRODUCTOS EN OFERTA
-      const productosOferta = getProductosEnOferta();
-      setOfertasCount(productosOferta.length);
-      
     } catch (err) {
-      console.error('💥 Error crítico cargando productos:', err);
       setError(`Error al cargar los productos: ${err.message}`);
       setProducts([]);
       setFilteredProducts([]);
@@ -73,30 +142,56 @@ const Index = () => {
     }
   };
 
-  useEffect(() => {
-    
-    loadProductsWithStockAndOffers();
-    
-    // Obtener categorías desde los datos originales
-    const uniqueCategories = ['all', ...new Set(productosData.map((product) => product.categoria))];
-    setCategories(uniqueCategories);
+  const actualizarStockProducto = (productoCodigo) => {
+    setProducts(prevProducts => {
+      const carritoActual = cartService.getCart();
+      
+      return prevProducts.map(producto => {
+        if (producto.codigo === productoCodigo) {
+          const stockDisponible = calcularStockDisponible(producto, carritoActual);
+          return {
+            ...producto,
+            stock_disponible: stockDisponible
+          };
+        }
+        return producto;
+      });
+    });
+  };
 
-    // Escuchar cambios en el carrito para actualizar stock
+  const actualizarStockDesdeCarrito = () => {
+    setProducts(prevProducts => {
+      const carritoActual = cartService.getCart();
+      
+      return prevProducts.map(producto => {
+        const stockDisponible = calcularStockDisponible(producto, carritoActual);
+        return {
+          ...producto,
+          stock_disponible: stockDisponible
+        };
+      });
+    });
+  };
+
+  useEffect(() => {
+    loadProductsWithStockAndOffers();
+  }, []);
+
+  useEffect(() => {
     const handleCartUpdate = () => {
-      loadProductsWithStockAndOffers();
+      actualizarStockDesdeCarrito();
     };
 
-    // Escuchar cambios de autenticación
-    const handleAuthChange = () => {
-      loadProductsWithStockAndOffers();
+    const handleStockUpdate = () => {
+      actualizarStockDesdeCarrito();
     };
 
     window.addEventListener('cartUpdated', handleCartUpdate);
-    window.addEventListener('authStateChanged', handleAuthChange);
+    window.addEventListener('stockUpdated', handleStockUpdate);
     
     return () => {
       window.removeEventListener('cartUpdated', handleCartUpdate);
-      window.removeEventListener('authStateChanged', handleAuthChange);
+      window.removeEventListener('stockUpdated', handleStockUpdate);
     };
   }, []);
 
@@ -109,81 +204,86 @@ const Index = () => {
       filtered = filtered.filter(
         (product) =>
           product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+          (product.descripcion && product.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
     setFilteredProducts(filtered);
   }, [selectedCategory, searchTerm, products]);
 
-  const handleAddToCart = (product) => {
+  const showSuccessMessage = (message) => {
+    setSuccessMessage(message);
+    setShowSuccessNotification(true);
+    setTimeout(() => {
+      setShowSuccessNotification(false);
+    }, 3000);
+  };
+
+  const handleAddToCart = async (product) => {
     const user = authService.getCurrentUser();
     if (!user) {
-      alert('🔐 Debes iniciar sesión para agregar productos al carrito');
+      alert('Debes iniciar sesión para agregar productos al carrito');
       navigate('/login');
       return;
     }
 
-    // Usar tu función verificarStockDisponible
-    if (!verificarStockDisponible(product.codigo, 1)) {
-      alert('❌ No hay stock disponible de este producto');
+    if (isAddingToCart[product.codigo]) {
       return;
     }
 
-    // Obtener el carrito actual
-    const carritoActual = JSON.parse(localStorage.getItem('junimoCart')) || [];
-    
-    // Verificar si el producto ya está en el carrito
-    const productoExistente = carritoActual.find(item => item.codigo === product.codigo);
-    
-    if (productoExistente) {
-      productoExistente.cantidad += 1;
-      productoExistente.subtotal = productoExistente.cantidad * (product.precioOferta || product.precio);
-    } else {
-      carritoActual.push({
-        ...product,
-        cantidad: 1,
-        subtotal: product.precioOferta || product.precio
-      });
+    setIsAddingToCart(prev => ({ ...prev, [product.codigo]: true }));
+
+    try {
+      const carritoActual = cartService.getCart();
+      const productoEnCarrito = carritoActual.find(item => item.codigo === product.codigo);
+      const cantidadEnCarrito = productoEnCarrito ? productoEnCarrito.cantidad : 0;
+      const stockDisponibleLocal = Math.max(0, product.stock - cantidadEnCarrito);
+
+      if (stockDisponibleLocal <= 0) {
+        alert(`No hay stock disponible de ${product.nombre}`);
+        return;
+      }
+
+      const stockDisponible = await cartService.checkAvailableStock(product.codigo, 1);
+      
+      if (!stockDisponible) {
+        const stockActual = await cartService.getCurrentStock(product.codigo);
+        alert(`No hay stock disponible de ${product.nombre}. Stock actual: ${stockActual}`);
+        return;
+      }
+
+      await cartService.addToCart(product, 1);
+      actualizarStockProducto(product.codigo);
+      showSuccessMessage(`${product.nombre} agregado al carrito`);
+
+    } catch (error) {
+      alert('Error al agregar producto al carrito: ' + error.message);
+    } finally {
+      setTimeout(() => {
+        setIsAddingToCart(prev => ({ ...prev, [product.codigo]: false }));
+      }, 1000);
     }
-
-    // Guardar en localStorage
-    localStorage.setItem('junimoCart', JSON.stringify(carritoActual));
-
-    // Disparar evento para actualizar todos los componentes
-    window.dispatchEvent(new Event('cartUpdated'));
-
-    // Recalcular stock disponible después de agregar al carrito
-    const nuevoStock = getProductosConStockActual().find(p => p.codigo === product.codigo)?.stock_disponible || 0;
-    
-    alert(`✅ ¡${product.nombre} agregado al carrito! Stock restante: ${nuevoStock}`);
   };
 
   const handleDetailsClick = (productCode) => {
     navigate(`/producto/${productCode}`);
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 100);
   };
 
-  // ✅ FUNCIÓN PARA IR A OFERTAS
   const handleGoToOfertas = () => {
     navigate('/ofertas');
   };
 
-  // Función para reintentar carga
   const handleRetry = () => {
     loadProductsWithStockAndOffers();
   };
 
-  // Función para resetear datos de emergencia
   const handleEmergencyReset = () => {
     if (confirm('¿Estás seguro de que quieres resetear todos los datos? Esto cargará los datos iniciales.')) {
       try {
         dataService.resetData();
-        alert('✅ Datos reseteados. La página se recargará.');
+        alert('Datos reseteados. La página se recargará.');
         window.location.reload();
       } catch (error) {
-        alert('❌ Error reseteando datos: ' + error.message);
+        alert('Error reseteando datos: ' + error.message);
       }
     }
   };
@@ -202,7 +302,24 @@ const Index = () => {
     >
       <div style={{ height: '80px' }}></div>
 
-      {/* ✅ MOSTRAR ESTADO DE CARGA */}
+      {showSuccessNotification && (
+        <div 
+          className="position-fixed top-0 end-0 m-3 p-3 rounded-3 border-3 border-success shadow-lg"
+          style={{
+            backgroundColor: '#d4edda',
+            color: '#155724',
+            zIndex: 9999,
+            maxWidth: '300px',
+            animation: 'slideInRight 0.3s ease-out'
+          }}
+        >
+          <div className="d-flex align-items-center">
+            <span className="me-2">✅</span>
+            <strong>{successMessage}</strong>
+          </div>
+        </div>
+      )}
+
       {loading && (
         <Container className="py-5 text-center">
           <div 
@@ -219,33 +336,31 @@ const Index = () => {
         </Container>
       )}
 
-      {/* ✅ MOSTRAR ERROR */}
       {error && !loading && (
         <Container className="py-4">
           <Alert variant="danger" className="text-center rounded-4">
-            <Alert.Heading className="d-flex align-items-center justify-content-center">
-              <span className="me-2">❌</span>
+            <Alert.Heading>
               Error al Cargar Productos
             </Alert.Heading>
             <p className="mb-3">{error}</p>
             <div className="d-flex justify-content-center gap-3 flex-wrap">
               <Button variant="outline-danger" onClick={handleRetry}>
-                🔄 Reintentar Carga
+                Reintentar Carga
               </Button>
               <Button variant="warning" onClick={handleEmergencyReset}>
-                🚨 Resetear Datos
+                Resetear Datos
               </Button>
               <Button variant="secondary" onClick={() => window.location.reload()}>
-                🔃 Recargar Página
+                Recargar Página
               </Button>
             </div>
           </Alert>
         </Container>
       )}
 
-      {/* ✅ CONTENIDO PRINCIPAL - Solo mostrar si no está cargando y no hay error */}
       {!loading && !error && (
         <>
+          {/* SECCIÓN LOGO JUNIMO SHOP */}
           <section className="py-4 text-center">
             <Container>
               <Row className="justify-content-center">
@@ -264,7 +379,7 @@ const Index = () => {
             </Container>
           </section>
 
-          {/* ✅ SECCIÓN DE OFERTAS DESTACADA */}
+          {/* SECCIÓN OFERTAS ACTIVAS */}
           {ofertasCount > 0 && (
             <section className="py-3">
               <Container>
@@ -285,7 +400,7 @@ const Index = () => {
                           textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
                         }}
                       >
-                        🔥 ¡Ofertas Activas!
+                        Ofertas Activas
                       </h3>
                       <p className="fs-5 text-white mb-3 fw-semibold">
                         Tenemos <Badge bg="danger" className="fs-4">{ofertasCount}</Badge> productos en oferta con descuentos increíbles
@@ -296,7 +411,7 @@ const Index = () => {
                         className="fw-bold border-3 border-dark rounded-3 px-4"
                         onClick={handleGoToOfertas}
                       >
-                        🎁 Ver Todas las Ofertas
+                        Ver Todas las Ofertas
                       </Button>
                     </div>
                   </Col>
@@ -305,6 +420,7 @@ const Index = () => {
             </section>
           )}
 
+          {/* SECCIÓN TÍTULO PRODUCTOS */}
           <section className="py-3 text-center">
             <Container>
               <Row className="justify-content-center">
@@ -323,18 +439,23 @@ const Index = () => {
                   <p className="fs-5" style={{ color: 'rgba(255,255,255,0.9)', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }} >
                     Descubre la magia de Stardew Valley en nuestra colección exclusiva
                   </p>
-                  {/* ✅ CONTADOR DE PRODUCTOS */}
                   <Badge 
                     bg="success" 
                     className="fs-6 px-3 py-2 mt-2"
                   >
-                    📦 {filteredProducts.length} productos encontrados
+                    {filteredProducts.length} productos encontrados
                   </Badge>
+                  {ofertasCount > 0 && (
+                    <Badge bg="danger" className="fs-6 px-3 py-2 mt-2 ms-2">
+                      {ofertasCount} en oferta
+                    </Badge>
+                  )}
                 </Col>
               </Row>
             </Container>
           </section>
 
+          {/* SECCIÓN FILTROS Y PRODUCTOS */}
           <section className="py-4">
             <Container>
               <Filters
@@ -353,6 +474,7 @@ const Index = () => {
                       product={product}
                       handleAddToCart={handleAddToCart}
                       handleDetailsClick={handleDetailsClick}
+                      isAddingToCart={isAddingToCart[product.codigo] || false}
                     />
                   </Col>
                 ))}
@@ -394,14 +516,14 @@ const Index = () => {
                             color: '#ffffff'
                           }}
                         >
-                          🔄 Ver Todos los Productos
+                          Ver Todos los Productos
                         </Button>
                         <Button
                           variant="outline-warning"
                           className="mt-2 fw-bold"
                           onClick={handleRetry}
                         >
-                          🔃 Reintentar Carga
+                          Reintentar Carga
                         </Button>
                       </div>
                     </div>

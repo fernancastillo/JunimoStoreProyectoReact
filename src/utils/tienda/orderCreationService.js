@@ -1,114 +1,153 @@
-// src/utils/tienda/orderCreationService.js
-import { loadFromLocalstorage, saveLocalstorage } from '../localstorageHelper';
-
-const ORDENES_KEY = 'app_ordenes';
+// utils/tienda/orderCreationService.js
+import { dataService } from '../dataService';
 
 export const orderCreationService = {
-  // ✅ GENERAR NÚMERO DE ORDEN AUTOMÁTICO
-  generateOrderNumber: () => {
-    const ordenes = orderCreationService.getOrdenes();
-    
-    if (ordenes.length === 0) {
-      return 'SO1001'; // Primera orden
-    }
-
-    // Encontrar el número más alto
-    const lastOrder = ordenes.reduce((max, orden) => {
-      const currentNum = parseInt(orden.numeroOrden.replace('SO', ''));
-      const maxNum = parseInt(max.numeroOrden.replace('SO', ''));
-      return currentNum > maxNum ? orden : max;
-    }, ordenes[0]);
-
-    // Incrementar en 1
-    const lastNumber = parseInt(lastOrder.numeroOrden.replace('SO', ''));
-    const newNumber = lastNumber + 1;
-    
-    return `SO${newNumber}`;
-  },
-
-  // ✅ OBTENER FECHA ACTUAL EN FORMATO DD/MM/YYYY
-  getCurrentDate: () => {
-    const now = new Date();
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
-    return `${day}/${month}/${year}`;
-  },
-
-  // ✅ CREAR NUEVA ORDEN
-  createOrder: (user, cartItems, total, discountCode = '', paymentData = null) => {
-    const nuevaOrden = {
-      numeroOrden: orderCreationService.generateOrderNumber(),
-      fecha: orderCreationService.getCurrentDate(),
-      run: user.id, // El run del usuario está en user.id según authService
-      estadoEnvio: 'Pendiente',
-      total: total,
-      productos: cartItems.map(item => ({
-        codigo: item.codigo,
-        nombre: item.nombre,
-        cantidad: item.cantidad,
-        precio: item.precio
-      })),
-      // Información adicional
-      descuentoAplicado: discountCode || '',
-      metodoPago: 'Tarjeta de Crédito',
-      transaccionId: paymentData?.transactionId || '',
-      fechaPago: paymentData?.timestamp ? new Date(paymentData.timestamp).toLocaleDateString('es-CL') : orderCreationService.getCurrentDate()
-    };
-
-    return nuevaOrden;
-  },
-
-  // ✅ GUARDAR ORDEN EN LOCALSTORAGE
-  saveOrder: (orden) => {
+  // Obtener la última orden para generar número secuencial
+  getLastOrderNumber: async () => {
     try {
-      const ordenes = orderCreationService.getOrdenes();
-      ordenes.push(orden);
-      saveLocalstorage(ORDENES_KEY, ordenes);
+      const orders = await dataService.getOrdenes();
       
-      console.log('✅ Orden guardada:', orden.numeroOrden);
-      return true;
-    } catch (error) {
-      console.error('❌ Error al guardar orden:', error);
-      return false;
-    }
-  },
-
-  // ✅ OBTENER TODAS LAS ÓRDENES (para uso interno de este servicio)
-  getOrdenes: () => {
-    try {
-      const ordenes = loadFromLocalstorage(ORDENES_KEY);
-      return ordenes || [];
-    } catch (error) {
-      console.error('Error al obtener órdenes:', error);
-      return [];
-    }
-  },
-
-  // ✅ OBTENER ÓRDENES POR USUARIO (para uso interno)
-  getOrdersByUser: (run) => {
-    const ordenes = orderCreationService.getOrdenes();
-    return ordenes.filter(orden => orden.run === run);
-  },
-
-  // ✅ ACTUALIZAR ESTADO DE ORDEN
-  updateOrderStatus: (numeroOrden, nuevoEstado) => {
-    try {
-      const ordenes = orderCreationService.getOrdenes();
-      const ordenIndex = ordenes.findIndex(orden => orden.numeroOrden === numeroOrden);
-      
-      if (ordenIndex !== -1) {
-        ordenes[ordenIndex].estadoEnvio = nuevoEstado;
-        ordenes[ordenIndex].fechaActualizacion = orderCreationService.getCurrentDate();
-        saveLocalstorage(ORDENES_KEY, ordenes);
-        return true;
+      if (!orders || orders.length === 0) {
+        return 'SO1000';
       }
-      return false;
+
+      let maxNumber = 0;
+      
+      orders.forEach(order => {
+        if (order.numeroOrden && order.numeroOrden.startsWith('SO')) {
+          const numberPart = order.numeroOrden.substring(2);
+          const number = parseInt(numberPart);
+          if (!isNaN(number) && number > maxNumber) {
+            maxNumber = number;
+          }
+        }
+      });
+
+      if (maxNumber === 0) {
+        return 'SO1000';
+      }
+
+      return `SO${maxNumber}`;
     } catch (error) {
-      console.error('Error al actualizar orden:', error);
-      return false;
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 100);
+      return `SO${timestamp}${random}`;
     }
+  },
+
+  // Generar número de orden secuencial
+  generateSequentialOrderNumber: async () => {
+    try {
+      const lastOrderNumber = await orderCreationService.getLastOrderNumber();
+      
+      const numberMatch = lastOrderNumber.match(/\d+/);
+      
+      if (!numberMatch) {
+        return 'SO1000';
+      }
+      
+      const currentNumber = parseInt(numberMatch[0]);
+      const nextNumber = currentNumber + 1;
+      
+      return `SO${nextNumber}`;
+      
+    } catch (error) {
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 100);
+      return `SO${timestamp}${random}`;
+    }
+  },
+
+  // Crear orden con detalles para BD Oracle
+  createOrderWithDetails: async (user, cartItems, totalFinal, discountCode = '', paymentData = null) => {
+    try {
+      if (!user || !user.run) {
+        throw new Error('Usuario no válido para crear orden');
+      }
+      
+      if (!cartItems || cartItems.length === 0) {
+        throw new Error('El carrito está vacío');
+      }
+
+      if (!totalFinal || totalFinal <= 0) {
+        throw new Error('Total final debe ser mayor a 0');
+      }
+
+      const numeroOrden = await orderCreationService.generateSequentialOrderNumber();
+      const fecha = new Date().toISOString().split('T')[0];
+      
+      const ordenCompleta = {
+        numeroOrden: numeroOrden,
+        fecha: fecha,
+        usuario: {
+          run: user.run
+        },
+        estadoEnvio: 'Pendiente',
+        total: Math.round(totalFinal),
+        detalles: cartItems.map(item => ({
+          producto: {
+            codigo: item.codigo
+          },
+          cantidad: item.cantidad
+        }))
+      };
+
+      return ordenCompleta;
+      
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Guardar orden en BD Oracle
+  saveOrder: async (orderData) => {
+    try {
+      if (!orderData.detalles || orderData.detalles.length === 0) {
+        throw new Error('La orden debe tener al menos un detalle');
+      }
+
+      if (!orderData.numeroOrden) {
+        throw new Error('La orden debe tener un número de orden');
+      }
+
+      const result = await dataService.addOrden(orderData);
+      
+      return result;
+      
+    } catch (error) {
+      throw new Error(`No se pudo guardar la orden en la base de datos: ${error.message}`);
+    }
+  },
+
+  // Procesar compra completa (FUNCIÓN PRINCIPAL)
+  processCompletePurchase: async (user, cartItems, totalFinal, discountCode = '', paymentData = null) => {
+    try {
+      if (cartItems.length === 0) {
+        throw new Error('El carrito está vacío');
+      }
+
+      const ordenCompleta = await orderCreationService.createOrderWithDetails(
+        user, 
+        cartItems, 
+        totalFinal, 
+        discountCode, 
+        paymentData
+      );
+
+      const ordenGuardada = await orderCreationService.saveOrder(ordenCompleta);
+      
+      return {
+        success: true,
+        order: ordenGuardada,
+        message: 'Compra procesada exitosamente'
+      };
+      
+    } catch (error) {
+      throw new Error(`No se pudo procesar la compra: ${error.message}`);
+    }
+  },
+
+  validateStock: (cartItems) => {
+    return true;
   }
 };
-
-export default orderCreationService;

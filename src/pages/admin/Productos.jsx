@@ -14,6 +14,27 @@ import {
   formatearFecha
 } from '../../utils/admin/reportUtils';
 
+// ✅ NUEVO: Componente para el mensaje de éxito
+const SuccessAlert = ({ message, show, onClose }) => {
+  if (!show) return null;
+
+  return (
+    <div className="alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3 shadow-lg" 
+         style={{ zIndex: 9999, minWidth: '300px' }} role="alert">
+      <div className="d-flex align-items-center">
+        <i className="bi bi-check-circle-fill me-2 fs-5"></i>
+        <strong>{message}</strong>
+        <button 
+          type="button" 
+          className="btn-close ms-2" 
+          onClick={onClose}
+          aria-label="Cerrar"
+        ></button>
+      </div>
+    </div>
+  );
+};
+
 const Productos = () => {
   const {
     productos,
@@ -23,6 +44,10 @@ const Productos = () => {
     editingProducto,
     showModal,
     filtros,
+    // ✅ NUEVO: Recibir los nuevos estados y funciones
+    successMessage,
+    showSuccessMessage,
+    clearSuccessMessage,
     handleCreate,
     handleUpdate,
     handleDelete,
@@ -40,7 +65,7 @@ const Productos = () => {
 
   // Aplicar el fondo al body
   useEffect(() => {
-    document.body.style.backgroundImage = 'url("https://images3.alphacoders.com/126/1269904.png")';
+    document.body.style.backgroundImage = 'url("../src/assets/tienda/fondostardew.png")';
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundPosition = 'center';
     document.body.style.backgroundRepeat = 'no-repeat';
@@ -177,6 +202,14 @@ ESTADÍSTICAS DEL REPORTE:
 
   return (
     <div className="container-fluid" style={{ padding: '20px', minHeight: '100vh' }}>
+      
+      {/* ✅ NUEVO: Mensaje de éxito */}
+      <SuccessAlert 
+        message={successMessage}
+        show={showSuccessMessage}
+        onClose={clearSuccessMessage}
+      />
+
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="h3 mb-0 text-white fw-bold" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}>

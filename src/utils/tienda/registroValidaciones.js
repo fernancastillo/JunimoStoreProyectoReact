@@ -71,8 +71,8 @@ export const registroValidaciones = {
   },
 
   validarPassword(password) {
-    // La contraseña debe tener entre 4 y 10 caracteres
-    return password.length >= 4 && password.length <= 10;
+    // La contraseña debe tener entre 6 y 10 caracteres
+    return password.length >= 6 && password.length <= 10;
   },
 
   validarConfirmarPassword(password, confirmarPassword) {
@@ -137,9 +137,9 @@ export const registroValidaciones = {
       errores.region = 'Seleccione una región';
     }
 
-    // Validar password (4-10 caracteres)
+    // Validar password (6-10 caracteres)
     if (!this.validarPassword(formData.password)) {
-      errores.password = 'La contraseña debe tener entre 4 y 10 caracteres';
+      errores.password = 'La contraseña debe tener entre 6 y 10 caracteres';
     }
 
     // Validar confirmación de password

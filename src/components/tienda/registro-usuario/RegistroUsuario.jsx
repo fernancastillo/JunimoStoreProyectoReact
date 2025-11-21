@@ -156,16 +156,18 @@ const RegistroUsuario = () => {
     return validacion.esValido;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  console.log('📝 Iniciando validación del formulario...');
+  
+  if (validarFormulario()) {
+    console.log('✅ Formulario válido, procediendo con registro...');
+    console.log('📦 Datos del formulario:', formData);
     
-    console.log('📝 Iniciando validación del formulario...');
-    
-    if (validarFormulario()) {
-      console.log('✅ Formulario válido, procediendo con registro...');
-      console.log('📦 Datos del formulario:', formData);
-      
-      const resultado = registroService.registrarUsuario(formData);
+    try {
+      // ✅ CORREGIDO: Agregar await
+      const resultado = await registroService.registrarUsuario(formData);
       
       console.log('🔍 Resultado del registro:', resultado);
       
@@ -202,11 +204,17 @@ const RegistroUsuario = () => {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }, 100);
       }
-    } else {
-      console.log('❌ Formulario inválido, errores:', errores);
-      setMostrarAlerta(false);
+    } catch (error) {
+      console.error('💥 Error inesperado en registro:', error);
+      setMensajeAlerta('Error inesperado al registrar. Intente nuevamente.');
+      setRegistroExitoso(false);
+      setMostrarAlerta(true);
     }
-  };
+  } else {
+    console.log('❌ Formulario inválido, errores:', errores);
+    setMostrarAlerta(false);
+  }
+};
 
   const handleContinue = () => {
     setShowSuccessModal(false);
@@ -607,7 +615,7 @@ const RegistroUsuario = () => {
                             value={formData.password}
                             onChange={handleChange}
                             isInvalid={!!errores.password}
-                            placeholder="Entre 4 y 10 caracteres"
+                            placeholder="Entre 6 y 10 caracteres"
                             className="border-3 border-dark rounded-3"
                             style={{
                               backgroundColor: '#FFFFFF',
@@ -628,7 +636,7 @@ const RegistroUsuario = () => {
                           </Button>
                         </InputGroup>
                         <Form.Text className="text-muted" style={{ fontFamily: "'Lato', sans-serif" }}>
-                          La contraseña debe tener entre 4 y 10 caracteres
+                          La contraseña debe tener entre 6 y 10 caracteres
                         </Form.Text>
                         <Form.Control.Feedback type="invalid" style={{ fontFamily: "'Lato', sans-serif" }}>
                           {errores.password}

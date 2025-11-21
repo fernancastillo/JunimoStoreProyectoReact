@@ -340,7 +340,7 @@ const UsuarioForm = ({ usuario, onSubmit, onCancel }) => {
       apellidos: formData.apellidos.trim(),
       correo: formData.correo,
       telefono: formData.telefono || '',
-      direccion: formData.direccion.trim(), // ✅ Dirección obligatoria
+      direccion: formData.direccion.trim(), 
       comuna: formData.comuna || '',
       region: formData.region || '',
       tipo: formData.tipo,
@@ -507,7 +507,7 @@ const UsuarioForm = ({ usuario, onSubmit, onCancel }) => {
         </div>
       </div>
 
-      {/* ✅ DIRECCIÓN OBLIGATORIA */}
+      {/* DIRECCIÓN OBLIGATORIA */}
       <div className="mb-3">
         <label htmlFor="direccion" className="form-label fw-bold">
           Dirección *
@@ -531,7 +531,7 @@ const UsuarioForm = ({ usuario, onSubmit, onCancel }) => {
       </div>
 
       <div className="row">
-        {/* ✅ REGIÓN PRIMERO */}
+        {/* REGIÓN PRIMERO */}
         <div className="col-md-6">
           <div className="mb-3">
             <label htmlFor="region" className="form-label fw-bold">
@@ -555,7 +555,7 @@ const UsuarioForm = ({ usuario, onSubmit, onCancel }) => {
           </div>
         </div>
 
-        {/* ✅ COMUNA DESPUÉS */}
+        {/* COMUNA DESPUÉS */}
         <div className="col-md-6">
           <div className="mb-3">
             <label htmlFor="comuna" className="form-label fw-bold">

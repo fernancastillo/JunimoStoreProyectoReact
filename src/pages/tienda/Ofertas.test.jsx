@@ -2,7 +2,7 @@
 import { render, screen, waitFor, act } from '@testing-library/react'
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { BrowserRouter } from 'react-router-dom'
-import Ofertas from './Ofertas'
+import Ofertas from './ofertas'
 
 // Paso 1: Mock básico de react-bootstrap
 vi.mock('react-bootstrap', () => ({

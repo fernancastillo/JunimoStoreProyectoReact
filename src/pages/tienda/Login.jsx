@@ -113,7 +113,7 @@ const Login = () => {
     <div 
       className="min-vh-100 w-100 py-5"
       style={{
-        backgroundImage: 'url("https://images3.alphacoders.com/126/1269904.png")',
+        backgroundImage: 'url("src/assets/tienda/fondostardew.png")',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',

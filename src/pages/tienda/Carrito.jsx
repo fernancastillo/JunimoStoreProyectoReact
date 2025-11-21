@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Alert, Button, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Alert, Button, Modal, Spinner } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../../utils/tienda/authService';
 import { cartService } from '../../utils/tienda/cartService';
@@ -14,25 +14,31 @@ const Carrito = () => {
   const [user, setUser] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const [showClearCartModal, setShowClearCartModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Cargar carrito desde localStorage
   const loadCart = () => {
     try {
       const items = cartService.getCart();
-      console.log('🔄 Cargando carrito desde localStorage');
-      
       if (items && items.length > 0) {
-        console.log('📦 Productos en carrito:', items);
         setCartItems(items);
-        cartService.updateReservedStock(items);
       } else {
-        console.log('🛒 Carrito vacío');
         setCartItems([]);
       }
     } catch (error) {
-      console.error('❌ Error al cargar carrito:', error);
       setCartItems([]);
+    }
+  };
+
+  const syncStock = async () => {
+    try {
+      setSyncLoading(true);
+      await cartService.syncLocalStockWithDB();
+      loadCart();
+    } catch (error) {
+    } finally {
+      setSyncLoading(false);
     }
   };
 
@@ -41,57 +47,55 @@ const Carrito = () => {
     const currentUser = authService.getCurrentUser();
     setUser(currentUser);
     
-    // Escuchar eventos de actualización del carrito
+    syncStock();
+    
     const handleCartUpdate = () => {
-      console.log('📢 Carrito recibió evento de actualización');
       loadCart();
     };
     
-    // Escuchar cambios de autenticación
     const handleAuthChange = () => {
       const currentUser = authService.getCurrentUser();
       setUser(currentUser);
-      loadCart(); // Recargar carrito cuando cambia el usuario
+      loadCart();
+    };
+
+    const handleStockUpdate = () => {
+      loadCart();
     };
 
     window.addEventListener('cartUpdated', handleCartUpdate);
     window.addEventListener('authStateChanged', handleAuthChange);
+    window.addEventListener('stockUpdated', handleStockUpdate);
     
     return () => {
       window.removeEventListener('cartUpdated', handleCartUpdate);
       window.removeEventListener('authStateChanged', handleAuthChange);
+      window.removeEventListener('stockUpdated', handleStockUpdate);
     };
   }, []);
 
-  // Actualizar cantidad
-  const handleUpdateQuantity = (productCode, newQuantity) => {
+  const handleUpdateQuantity = async (productCode, newQuantity) => {
     try {
-      if (!cartService.checkAvailableStock(productCode, newQuantity)) {
-        alert('❌ No hay suficiente stock disponible');
-        return;
-      }
-
-      const updatedCart = cartService.updateQuantity(productCode, newQuantity);
+      setLoading(true);
+      const updatedCart = await cartService.updateQuantity(productCode, newQuantity);
       setCartItems(updatedCart);
-      window.dispatchEvent(new Event('cartUpdated'));
-      
     } catch (error) {
-      console.error('Error al actualizar cantidad:', error);
+      alert(error.message);
+      loadCart();
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Eliminar producto
   const handleRemoveItem = (productCode) => {
     try {
       const updatedCart = cartService.removeItem(productCode);
       setCartItems(updatedCart);
-      window.dispatchEvent(new Event('cartUpdated'));
     } catch (error) {
-      console.error('Error al eliminar producto:', error);
+      alert('Error al eliminar producto: ' + error.message);
     }
   };
 
-  // Vaciar carrito con confirmación
   const handleClearCartClick = () => {
     setShowClearCartModal(true);
   };
@@ -99,67 +103,56 @@ const Carrito = () => {
   const confirmClearCart = () => {
     cartService.clearCart();
     setCartItems([]);
-    window.dispatchEvent(new Event('cartUpdated'));
     setShowClearCartModal(false);
   };
 
- // ✅ FUNCIÓN ACTUALIZADA - ALERTA SIMPLE Y REDIRECCIÓN AL TOP DEL INDEX
-const handleCheckout = (totalFinal, discountCode = '', paymentData = null) => {
+ const handleCheckout = async (totalFinal, discountCode = '', paymentData = null) => {
   if (!user) {
     navigate('/login');
     return;
   }
 
   try {
-    console.log('✅ Procesando compra...');
-    console.log('💰 Total final:', totalFinal);
-    if (discountCode) {
-      console.log('🎫 Código de descuento:', discountCode);
-    }
-    if (paymentData) {
-      console.log('💳 Datos de pago:', paymentData.transactionId);
+    if (cartItems.length === 0) {
+      throw new Error('El carrito está vacío');
     }
 
-    // 1. CREAR NUEVA ORDEN usando orderCreationService
-    const nuevaOrden = orderCreationService.createOrder(user, cartItems, totalFinal, discountCode, paymentData);
-    console.log('📦 Nueva orden creada:', nuevaOrden);
-
-    // 2. GUARDAR ORDEN EN LOCALSTORAGE
-    const ordenGuardada = orderCreationService.saveOrder(nuevaOrden);
-    
-    if (!ordenGuardada) {
-      throw new Error('No se pudo guardar la orden');
+    for (const item of cartItems) {
+      const stockDisponible = await cartService.checkAvailableStock(item.codigo, item.cantidad);
+      if (!stockDisponible) {
+        throw new Error(`Stock insuficiente para: ${item.nombre}. Por favor, actualiza las cantidades.`);
+      }
     }
 
-    // 3. ACTUALIZAR STOCK (procesar checkout)
-    cartService.processCheckout(cartItems, totalFinal);
+    const resultadoCompra = await orderCreationService.processCompletePurchase(
+      user, 
+      cartItems,
+      totalFinal, 
+      discountCode, 
+      paymentData
+    );
 
-    // 4. VACIAR CARRITO
+    if (!resultadoCompra.success) {
+      throw new Error(resultadoCompra.error);
+    }
+
+    const ordenCreada = resultadoCompra.order;
+
     cartService.clearCart();
     setCartItems([]);
-    window.dispatchEvent(new Event('cartUpdated'));
 
-    // 5. ✅ MOSTRAR ALERTA DE ÉXITO Y REDIRIGIR AL TOP DEL INDEX
-    console.log('🎉 Pago exitoso, mostrando alerta...');
-    
-    alert('✅ ¡Pago exitoso! Tu compra ha sido procesada correctamente.\n\n' +
-          `📦 Número de orden: ${nuevaOrden.numeroOrden}\n` +
-          `💰 Total pagado: $${totalFinal.toLocaleString('es-CL')}\n` +
-          `🔒 ID de transacción: ${paymentData?.transactionId || 'Procesada'}\n\n` +
+    alert('¡Pago exitoso! Tu compra ha sido procesada correctamente.\n\n' +
+          `Número de orden: ${ordenCreada.numeroOrden}\n` +
+          `Total pagado: $${totalFinal.toLocaleString('es-CL')}\n\n` +
           'Serás redirigido a la página principal...');
     
-    // Redirigir al index y hacer scroll al top
     setTimeout(() => {
       navigate('/index', { replace: true });
-      // Forzar scroll al top después de la navegación
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-      }, 100);
+      setTimeout(() => window.scrollTo(0, 0), 100);
     }, 500);
 
   } catch (error) {
-    console.error('❌ Error en checkout:', error);
-    alert('❌ Error al procesar la compra: ' + error.message);
+    alert('Error al procesar la compra: ' + error.message);
   }
 };
 
@@ -170,7 +163,7 @@ const handleCheckout = (totalFinal, discountCode = '', paymentData = null) => {
       <div 
         className="min-vh-100 w-100"
         style={{
-          backgroundImage: 'url("https://images3.alphacoders.com/126/1269904.png")',
+          backgroundImage: 'url("src/assets/tienda/fondostardew.png")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'fixed',
@@ -208,14 +201,13 @@ const handleCheckout = (totalFinal, discountCode = '', paymentData = null) => {
               fontFamily: "'Lato', sans-serif"
             }}
           >
-            ✅ ¡Compra realizada con éxito! Redirigiendo a tus pedidos...
+            ¡Compra realizada con éxito! Redirigiendo a tus pedidos...
           </Alert>
         )}
         
         <Row className="mb-4">
           <Col>
             <div className="text-center">
-              {/* Imagen del carrito en lugar del texto */}
               <div className="mb-3">
                 <img
                   src={carritoImage}
@@ -227,9 +219,7 @@ const handleCheckout = (totalFinal, discountCode = '', paymentData = null) => {
                     filter: 'drop-shadow(3px 3px 6px rgba(0,0,0,0.8))'
                   }}
                   onError={(e) => {
-                    // Fallback si la imagen no carga
                     e.target.style.display = 'none';
-                    // Mostrar texto alternativo
                     const fallbackElement = document.getElementById('fallback-title');
                     if (fallbackElement) {
                       fallbackElement.style.display = 'block';
@@ -238,7 +228,6 @@ const handleCheckout = (totalFinal, discountCode = '', paymentData = null) => {
                 />
               </div>
               
-              {/* Texto alternativo que se muestra si la imagen no carga */}
               <h1 
                 id="fallback-title"
                 className="text-center mb-3"
@@ -248,10 +237,10 @@ const handleCheckout = (totalFinal, discountCode = '', paymentData = null) => {
                   fontWeight: 'bold',
                   fontSize: '2.5rem',
                   textShadow: '2px 2px 4px rgba(255, 255, 255, 0.8)',
-                  display: 'none' /* Oculto por defecto */
+                  display: 'none'
                 }}
               >
-                🛒 Mi Carrito de Compras
+                Mi Carrito de Compras
               </h1>
               
               <p 
@@ -278,17 +267,25 @@ const handleCheckout = (totalFinal, discountCode = '', paymentData = null) => {
                 fontFamily: "'Lato', sans-serif"
               }}
             >
-              {/* Items del carrito */}
+              {loading && (
+                <div className="text-center mb-3">
+                  <div className="spinner-border text-dark" role="status">
+                    <span className="visually-hidden">Cargando...</span>
+                  </div>
+                  <p className="mt-2">Actualizando carrito...</p>
+                </div>
+              )}
+              
               {cartItems.map(item => (
                 <CartItem 
                   key={item.codigo}
                   item={item}
                   onUpdateQuantity={handleUpdateQuantity}
                   onRemove={handleRemoveItem}
+                  disabled={loading}
                 />
               ))}
               
-              {/* Acciones del carrito */}
               <Row className="mt-4">
                 <Col>
                   <div className="d-flex justify-content-between">
@@ -328,18 +325,23 @@ const handleCheckout = (totalFinal, discountCode = '', paymentData = null) => {
                         fontFamily: "'Lato', sans-serif"
                       }}
                       onClick={handleClearCartClick}
+                      disabled={loading}
                       onMouseEnter={(e) => {
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 6px 20px rgba(220, 53, 69, 0.4)';
-                        e.target.style.backgroundColor = '#FFD700';
+                        if (!loading) {
+                          e.target.style.transform = 'translateY(-2px)';
+                          e.target.style.boxShadow = '0 6px 20px rgba(220, 53, 69, 0.4)';
+                          e.target.style.backgroundColor = '#FFD700';
+                        }
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = 'none';
-                        e.target.style.backgroundColor = '#dedd8ff5';
+                        if (!loading) {
+                          e.target.style.transform = 'translateY(0)';
+                          e.target.style.boxShadow = 'none';
+                          e.target.style.backgroundColor = '#dedd8ff5';
+                        }
                       }}
                     >
-                      🗑️ Vaciar Carrito
+                      Vaciar Carrito
                     </Button>
                   </div>
                 </Col>
@@ -353,12 +355,12 @@ const handleCheckout = (totalFinal, discountCode = '', paymentData = null) => {
               total={total}
               onCheckout={handleCheckout}
               user={user}
+              disabled={loading}
             />
           </Col>
         </Row>
       </Container>
 
-      {/* Modal de confirmación para vaciar carrito */}
       <Modal
         show={showClearCartModal}
         onHide={() => setShowClearCartModal(false)}
@@ -374,7 +376,7 @@ const handleCheckout = (totalFinal, discountCode = '', paymentData = null) => {
         >
           <Modal.Title className="fw-bold" style={{ color: '#000000' }}>
             <span style={{ fontFamily: "'Indie Flower', cursive" }}>
-              🗑️ Vaciar Carrito
+              Vaciar Carrito
             </span>
           </Modal.Title>
         </Modal.Header>
@@ -413,7 +415,7 @@ const handleCheckout = (totalFinal, discountCode = '', paymentData = null) => {
               className="fw-semibold text-danger"
               style={{ color: '#000000' }}
             >
-              ⚠️ Esta acción no se puede deshacer
+              Esta acción no se puede deshacer
             </p>
           </div>
         </Modal.Body>

@@ -18,6 +18,10 @@ export const useUsuarios = () => {
     tipo: ''
   });
 
+  // Estado para el mensaje de éxito
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
   useEffect(() => {
     loadUsuarios();
   }, []);
@@ -39,6 +43,12 @@ export const useUsuarios = () => {
     }
   }, []);
 
+  // Función para limpiar el mensaje de éxito
+  const clearSuccessMessage = () => {
+    setShowSuccessMessage(false);
+    setSuccessMessage('');
+  };
+
   const handleEdit = (usuario) => {
     // Validar que no sea administrador
     if (usuario.tipo === 'Admin') {
@@ -59,6 +69,15 @@ export const useUsuarios = () => {
       
       await usuarioService.updateUsuario(run, datosActualizados);
       await loadUsuarios();
+      
+      // Mostrar mensaje de éxito para actualización
+      setSuccessMessage('¡Usuario actualizado con éxito!');
+      setShowSuccessMessage(true);
+      
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
+      
     } catch (error) {
       console.error('Error actualizando usuario:', error);
       throw error;
@@ -75,6 +94,15 @@ export const useUsuarios = () => {
       
       await usuarioService.deleteUsuario(run);
       await loadUsuarios();
+      
+      // Mostrar mensaje de éxito para eliminación
+      setSuccessMessage('¡Usuario eliminado con éxito!');
+      setShowSuccessMessage(true);
+      
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
+      
       return { success: true };
     } catch (error) {
       console.error('Error eliminando usuario:', error);
@@ -103,6 +131,15 @@ export const useUsuarios = () => {
       await usuarioService.createUsuario(usuarioData);
       await loadUsuarios();
       setShowCreateModal(false);
+      
+      // Mostrar mensaje de éxito para creación
+      setSuccessMessage('¡Usuario creado con éxito!');
+      setShowSuccessMessage(true);
+      
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
+      
     } catch (error) {
       console.error('Error creando usuario:', error);
       throw error;
@@ -148,6 +185,11 @@ export const useUsuarios = () => {
     creatingUsuario,
     filtros,
     estadisticas,
+    
+    // Exportar los estados y funciones del mensaje
+    successMessage,
+    showSuccessMessage,
+    clearSuccessMessage,
     
     // Acciones
     handleEdit,

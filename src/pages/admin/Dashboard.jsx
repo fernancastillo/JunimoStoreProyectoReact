@@ -11,7 +11,7 @@ const Dashboard = () => {
 
   // Aplicar el fondo al body
   useEffect(() => {
-    document.body.style.backgroundImage = 'url("https://images3.alphacoders.com/126/1269904.png")';
+    document.body.style.backgroundImage = 'url("../src/assets/tienda/fondostardew.png")';
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundPosition = 'center';
     document.body.style.backgroundRepeat = 'no-repeat';

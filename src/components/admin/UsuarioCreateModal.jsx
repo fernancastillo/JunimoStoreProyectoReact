@@ -277,11 +277,11 @@ const UsuarioCreateModal = ({ show, usuario, onSave, onClose }) => {
       }
     }
 
-    // Validar contraseña (4-10 caracteres)
+    // Validar contraseña (6-10 caracteres)
     if (!formData.password) {
       nuevosErrores.password = 'La contraseña es obligatoria';
-    } else if (formData.password.length < 4 || formData.password.length > 10) {
-      nuevosErrores.password = 'La contraseña debe tener entre 4 y 10 caracteres';
+    } else if (formData.password.length < 6 || formData.password.length > 10) {
+      nuevosErrores.password = 'La contraseña debe tener entre 6 y 10 caracteres';
     }
 
     // Validar confirmación de contraseña

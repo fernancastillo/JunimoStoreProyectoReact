@@ -13,27 +13,31 @@ const OrderCard = ({ order }) => {
   };
 
   const formatCurrency = (amount) => {
-    return `$${amount.toLocaleString('es-CL')}`;
+    return `$${amount?.toLocaleString('es-CL') || '0'}`;
   };
 
   const getProductImage = (producto) => {
+    if (producto.imagen) {
+      return producto.imagen;
+    }
+    
     try {
       const productos = JSON.parse(localStorage.getItem('app_productos') || '[]');
       const productoCompleto = productos.find(p => p.codigo === producto.codigo);
-      
-      if (productoCompleto && productoCompleto.imagen) {
-        return productoCompleto.imagen;
-      }
+      return productoCompleto?.imagen;
     } catch (error) {
       console.error('Error al buscar imagen del producto:', error);
     }
     
-    return `https://via.placeholder.com/50x50/2E8B57/FFFFFF?text=${producto.codigo}`;
+    return `https://via.placeholder.com/50x50/2E8B57/FFFFFF?text=${producto.codigo || 'Prod'}`;
   };
 
   const getFallbackImage = () => {
     return 'https://via.placeholder.com/50x50/2E8B57/FFFFFF?text=Imagen';
   };
+
+  // Verificar si la orden tiene productos
+  const hasProducts = order.productos && order.productos.length > 0;
 
   return (
     <Card 
@@ -44,7 +48,6 @@ const OrderCard = ({ order }) => {
         overflow: 'hidden'
       }}
     >
-      {/* Header Amarillo */}
       <Card.Header 
         className="d-flex justify-content-between align-items-center border-3 border-dark"
         style={{
@@ -74,15 +77,13 @@ const OrderCard = ({ order }) => {
             fontWeight: '600'
           }}
         >
-          {order.estadoEnvio.toUpperCase()}
+          {order.estadoEnvio?.toUpperCase() || 'PENDIENTE'}
         </Badge>
       </Card.Header>
       
-      {/* Body Azul */}
       <Card.Body className="p-0" style={{ backgroundColor: '#87CEEB' }}>
-        {(order.productos && order.productos.length > 0) ? (
+        {hasProducts ? (
           <>
-            {/* Tabla con productos */}
             <Table 
               responsive 
               className="mb-0 rounded"
@@ -160,13 +161,13 @@ const OrderCard = ({ order }) => {
                             className="fw-bold"
                             style={{ color: '#000000' }}
                           >
-                            {item.nombre}
+                            {item.nombre || 'Producto sin nombre'}
                           </div>
                           <small 
                             className="text-muted"
                             style={{ color: '#000000' }}
                           >
-                            Código: {item.codigo}
+                            Código: {item.codigo || 'N/A'}
                           </small>
                         </div>
                       </div>
@@ -178,7 +179,7 @@ const OrderCard = ({ order }) => {
                       backgroundColor: '#87CEEB',
                       borderBottom: index === order.productos.length - 1 ? 'none' : '1px solid rgba(0,0,0,0.2)'
                     }}>
-                      {item.cantidad}
+                      {item.cantidad || 0}
                     </td>
                     <td style={{ 
                       color: '#000000', 
@@ -196,14 +197,13 @@ const OrderCard = ({ order }) => {
                       backgroundColor: '#87CEEB',
                       borderBottom: index === order.productos.length - 1 ? 'none' : '1px solid rgba(0,0,0,0.2)'
                     }}>
-                      {formatCurrency(item.precio * item.cantidad)}
+                      {formatCurrency((item.precio || 0) * (item.cantidad || 0))}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </Table>
             
-            {/* Footer Amarillo */}
             <div 
               className="d-flex justify-content-end align-items-center py-3 border-top border-dark px-3"
               style={{
@@ -234,10 +234,12 @@ const OrderCard = ({ order }) => {
                 className="mb-0"
                 style={{ color: '#000000', fontWeight: '500' }}
               >
-                Esta orden no contiene productos
+                No se pudieron cargar los detalles de los productos
               </p>
+              <small style={{ color: '#000000' }}>
+                Número de orden: {order.numeroOrden}
+              </small>
             </div>
-            {/* Footer Amarillo para orden sin productos */}
             <div 
               className="d-flex justify-content-end align-items-center py-3 border-top border-dark px-3"
               style={{

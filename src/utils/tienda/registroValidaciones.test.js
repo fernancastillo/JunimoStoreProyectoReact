@@ -91,24 +91,24 @@ describe('registroValidaciones', () => {
 
   describe('validarPassword', () => {
     it('valida contraseña correcta', () => {
-      expect(registroValidaciones.validarPassword('1234')).toBe(true);
+      expect(registroValidaciones.validarPassword('123456')).toBe(true);
       expect(registroValidaciones.validarPassword('1234567890')).toBe(true);
-      expect(registroValidaciones.validarPassword('abcd')).toBe(true);
+      expect(registroValidaciones.validarPassword('abcdefgh')).toBe(true);
     });
 
     it('rechaza contraseña incorrecta', () => {
-      expect(registroValidaciones.validarPassword('123')).toBe(false);
+      expect(registroValidaciones.validarPassword('1234')).toBe(false);
       expect(registroValidaciones.validarPassword('12345678901')).toBe(false);
     });
   });
 
   describe('validarConfirmarPassword', () => {
     it('valida contraseñas coincidentes', () => {
-      expect(registroValidaciones.validarConfirmarPassword('1234', '1234')).toBe(true);
+      expect(registroValidaciones.validarConfirmarPassword('123456', '123456')).toBe(true);
     });
 
     it('rechaza contraseñas diferentes', () => {
-      expect(registroValidaciones.validarConfirmarPassword('1234', '1235')).toBe(false);
+      expect(registroValidaciones.validarConfirmarPassword('123456', '123465')).toBe(false);
     });
   });
 
@@ -143,8 +143,8 @@ describe('registroValidaciones', () => {
         direccion: 'Calle Falsa 123',
         comuna: 'Santiago',
         region: '13',
-        password: '1234',
-        confirmarPassword: '1234',
+        password: '123456',
+        confirmarPassword: '123456',
         fechaNacimiento: '1990-01-01'
       };
 
@@ -195,8 +195,8 @@ describe('registroValidaciones', () => {
         direccion: 'Calle Falsa 123',
         comuna: 'Santiago',
         region: '13',
-        password: '1234',
-        confirmarPassword: '1234',
+        password: '123456',
+        confirmarPassword: '123456',
         fechaNacimiento: '1990-01-01'
       };
 
@@ -219,8 +219,8 @@ describe('registroValidaciones', () => {
         direccion: 'Calle Falsa 123',
         comuna: 'Santiago',
         region: '13',
-        password: '1234',
-        confirmarPassword: '1234',
+        password: '123456',
+        confirmarPassword: '123456',
         fechaNacimiento: fechaNacimiento.toISOString().split('T')[0]
       };
 

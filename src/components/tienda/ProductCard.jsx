@@ -2,34 +2,49 @@ import React, { useState, useEffect } from 'react';
 import { Card, Button, Badge, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { formatearPrecio, categoryIcons } from '../../utils/tienda/tiendaUtils';
 import { authService } from '../../utils/tienda/authService';
-import { getProductosConStockActual } from '../../utils/tienda/stockService'; // ✅ NUEVO IMPORT
+import { useNavigate } from 'react-router-dom';
 
-const ProductCard = ({ product, handleAddToCart, handleDetailsClick }) => {
+const ProductCard = ({ product, handleAddToCart, handleDetailsClick, isAddingToCart }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [stockDisponible, setStockDisponible] = useState(
     product.stock_disponible !== undefined ? product.stock_disponible : product.stock
-  ); // ✅ NUEVO ESTADO PARA STOCK EN TIEMPO REAL
+  );
+  const navigate = useNavigate();
 
-  // ✅ ACTUALIZAR STOCK EN TIEMPO REAL
+  const handleDetailsClickWithScroll = (productCode) => {
+    if (handleDetailsClick) {
+      handleDetailsClick(productCode);
+    }
+    
+    navigate(`/producto/${productCode}`);
+    
+    setTimeout(() => {
+      window.scrollTo({ 
+        top: 0, 
+        behavior: 'smooth' 
+      });
+    }, 50);
+  };
+
+  // ACTUALIZADO: Sincronización más robusta del stock
   useEffect(() => {
+    // Actualizar el stock inicial
+    setStockDisponible(product.stock_disponible);
+
     const actualizarStock = () => {
-      const productosActualizados = getProductosConStockActual();
-      const productoActualizado = productosActualizados.find(p => p.codigo === product.codigo);
-      if (productoActualizado) {
-        setStockDisponible(productoActualizado.stock_disponible);
-      }
+      // Forzar actualización del stock desde las props
+      setStockDisponible(product.stock_disponible);
     };
 
-    // Actualizar inicialmente
-    actualizarStock();
-
-    // Escuchar cambios en el carrito
+    // Escuchar eventos de actualización
+    window.addEventListener('stockUpdated', actualizarStock);
     window.addEventListener('cartUpdated', actualizarStock);
     
     return () => {
+      window.removeEventListener('stockUpdated', actualizarStock);
       window.removeEventListener('cartUpdated', actualizarStock);
     };
-  }, [product.codigo]);
+  }, [product.stock_disponible]); // Se ejecuta cuando cambia stock_disponible en las props
 
   useEffect(() => {
     setIsLoggedIn(!!authService.getCurrentUser());
@@ -42,36 +57,27 @@ const ProductCard = ({ product, handleAddToCart, handleDetailsClick }) => {
     return () => window.removeEventListener('authStateChanged', checkAuth);
   }, []);
 
-  // ✅ VERIFICAR SI EL PRODUCTO ESTÁ EN OFERTA
   const estaEnOferta = product.enOferta && product.descuento > 0;
 
-  // ✅ ACTUALIZADO: Usar stockDisponible en tiempo real
   const getStockBadgeText = () => {
-    if (stockDisponible === 0) return '❌ Sin Stock';
-    if (stockDisponible < product.stock_critico) return `⚠️ ${stockDisponible} unidades`;
-    return `📦 ${stockDisponible} unidades`;
+    if (stockDisponible === 0) return 'Sin Stock';
+    if (stockDisponible < product.stock_critico) return `${stockDisponible} unidades`;
+    return `${stockDisponible} unidades`;
   };
 
   const getButtonText = () => {
-    if (!isLoggedIn) return '🔐 Inicia Sesión';
-    if (stockDisponible === 0) return '❌ Sin Stock';
-    return '🛒 Agregar al Carrito';
+    if (isAddingToCart) return 'Agregando...';
+    if (!isLoggedIn) return 'Inicia Sesión';
+    if (stockDisponible === 0) return 'Sin Stock';
+    return 'Agregar al Carrito';
   };
 
   const isButtonDisabled = () => {
-    return !isLoggedIn || stockDisponible === 0;
+    return !isLoggedIn || stockDisponible === 0 || isAddingToCart;
   };
 
   const getButtonStyle = () => {
-    if (!isLoggedIn) {
-      return {
-        backgroundColor: '#6c757d',
-        color: '#ffffff',
-        border: '2px solid #000000',
-        opacity: 1
-      };
-    }
-    if (stockDisponible === 0) {
+    if (!isLoggedIn || stockDisponible === 0 || isAddingToCart) {
       return {
         backgroundColor: '#6c757d',
         color: '#ffffff',
@@ -90,6 +96,7 @@ const ProductCard = ({ product, handleAddToCart, handleDetailsClick }) => {
   const getTooltipText = () => {
     if (!isLoggedIn) return 'Inicia sesión para agregar productos al carrito';
     if (stockDisponible === 0) return 'No hay stock disponible';
+    if (isAddingToCart) return 'Agregando producto...';
     return 'Agregar al carrito';
   };
 
@@ -97,6 +104,18 @@ const ProductCard = ({ product, handleAddToCart, handleDetailsClick }) => {
     if (stockDisponible === 0) return '#dc3545';
     if (stockDisponible < product.stock_critico) return '#ffc107';
     return '#28a745';
+  };
+
+  const handleAddToCartClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleAddToCart(product);
+  };
+
+  const handleDetailsClickLocal = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleDetailsClickWithScroll(product.codigo);
   };
 
   return (
@@ -117,7 +136,6 @@ const ProductCard = ({ product, handleAddToCart, handleDetailsClick }) => {
         e.currentTarget.style.boxShadow = '0 5px 15px rgba(0,0,0,0.1)';
       }}
     >
-      {/* ✅ BADGE DE OFERTA */}
       {estaEnOferta && (
         <Badge 
           bg="danger" 
@@ -170,7 +188,6 @@ const ProductCard = ({ product, handleAddToCart, handleDetailsClick }) => {
           >
             {categoryIcons[product.categoria]} {product.categoria}
           </Badge>
-          {/* ✅ BADGE DE STOCK ACTUALIZADO EN TIEMPO REAL */}
           <Badge
             className="ms-1 fw-bold"
             style={{
@@ -190,7 +207,7 @@ const ProductCard = ({ product, handleAddToCart, handleDetailsClick }) => {
                 border: '1px solid #000000'
               }}
             >
-              🔐 Inicia Sesión
+              Inicia Sesión
             </Badge>
           )}
         </div>
@@ -225,18 +242,15 @@ const ProductCard = ({ product, handleAddToCart, handleDetailsClick }) => {
         </Card.Text>
 
         <div className="mt-auto">
-          {/* ✅ SECCIÓN DE PRECIO ACTUALIZADA PARA OFERTAS */}
           <div className="d-flex justify-content-between align-items-center mb-2">
             {estaEnOferta ? (
               <div>
-                {/* Precio original tachado */}
                 <div 
                   className="text-muted text-decoration-line-through small"
                   style={{ lineHeight: '1' }}
                 >
                   {formatearPrecio(product.precioOriginal)}
                 </div>
-                {/* Precio de oferta */}
                 <span
                   className="fw-bold text-danger"
                   style={{ fontSize: '1.2rem', lineHeight: '1.2' }}
@@ -259,14 +273,14 @@ const ProductCard = ({ product, handleAddToCart, handleDetailsClick }) => {
               variant="outline-dark"
               size="sm"
               className="rounded fw-bold"
-              onClick={() => handleDetailsClick(product.codigo)}
+              onClick={handleDetailsClickLocal}
               style={{
                 border: '2px solid #000000',
                 color: '#000000',
                 backgroundColor: 'transparent'
               }}
             >
-              👀 Ver Detalles
+              Ver Detalles
             </Button>
             
             <OverlayTrigger
@@ -280,7 +294,7 @@ const ProductCard = ({ product, handleAddToCart, handleDetailsClick }) => {
               <Button
                 size="sm"
                 className="rounded fw-bold"
-                onClick={() => handleAddToCart(product)}
+                onClick={handleAddToCartClick}
                 disabled={isButtonDisabled()}
                 style={getButtonStyle()}
               >
