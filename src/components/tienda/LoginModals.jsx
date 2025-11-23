@@ -1,5 +1,8 @@
 import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
+// Importar las imágenes
+import feliImg from '../../assets/tienda/feli.png';
+import nopeImg from '../../assets/tienda/nope.webp';
 
 export const SuccessModal = ({ show, onHide, user, userType }) => {
   return (
@@ -10,7 +13,7 @@ export const SuccessModal = ({ show, onHide, user, userType }) => {
       size="lg"
       style={{ fontFamily: "'Lato', sans-serif" }}
     >
-      <Modal.Header 
+      <Modal.Header
         className="border-3 border-dark"
         style={{
           backgroundColor: '#87CEEB',
@@ -18,7 +21,7 @@ export const SuccessModal = ({ show, onHide, user, userType }) => {
       >
         <Modal.Title className="fw-bold text-center w-100" style={{ color: '#000000' }}>
           <span style={{ fontFamily: "'Indie Flower', cursive", fontSize: '1.8rem' }}>
-            ✅ ¡Inicio de Sesión Exitoso!
+            ¡Inicio de Sesión Exitoso!
           </span>
         </Modal.Title>
       </Modal.Header>
@@ -29,40 +32,47 @@ export const SuccessModal = ({ show, onHide, user, userType }) => {
         }}
       >
         <div className="mb-4">
-          <div 
-            className="display-1 mb-3"
-            style={{ color: '#000000' }}
-          >
-            🎉
+          <div className="mb-3 d-flex justify-content-center">
+            <img
+              src={feliImg}
+              alt="Inicio de sesión exitoso"
+              style={{
+                width: '120px',
+                height: '120px',
+                objectFit: 'contain'
+              }}
+            />
           </div>
-          <h4 
+          <h4
             className="fw-bold mb-3"
-            style={{ 
+            style={{
               color: '#000000',
               fontFamily: "'Indie Flower', cursive"
             }}
           >
             ¡Bienvenido de vuelta, {user?.nombre}!
           </h4>
-          <p 
+          <p
             className="fs-5"
-            style={{ 
+            style={{
               color: '#000000',
               fontWeight: '500'
             }}
           >
             Has iniciado sesión correctamente.
           </p>
-          <p 
+          <p
             className="fs-6"
-            style={{ 
+            style={{
               color: '#000000',
               fontWeight: '400'
             }}
           >
-            {userType === 'Administrador' || userType === 'Admin'
-              ? 'Serás redirigido al panel de administración.' 
-              : 'Serás redirigido a la página principal.'}
+            {userType === 'Administrador'
+              ? 'Serás redirigido al panel de administración.'
+              : userType === 'Vendedor'
+                ? 'Serás redirigido al panel de vendedor.'
+                : 'Serás redirigido a la página principal.'}
           </p>
         </div>
       </Modal.Body>
@@ -72,7 +82,7 @@ export const SuccessModal = ({ show, onHide, user, userType }) => {
           backgroundColor: '#87CEEB',
         }}
       >
-        <Button 
+        <Button
           onClick={onHide}
           className="rounded-pill px-5 py-2 border-3 border-dark fw-bold"
           style={{
@@ -109,7 +119,7 @@ export const ErrorModal = ({ show, onHide, error }) => {
       size="lg"
       style={{ fontFamily: "'Lato', sans-serif" }}
     >
-      <Modal.Header 
+      <Modal.Header
         className="border-3 border-dark"
         style={{
           backgroundColor: '#87CEEB',
@@ -117,7 +127,7 @@ export const ErrorModal = ({ show, onHide, error }) => {
       >
         <Modal.Title className="fw-bold text-center w-100" style={{ color: '#000000' }}>
           <span style={{ fontFamily: "'Indie Flower', cursive", fontSize: '1.8rem' }}>
-            ❌ Error al Iniciar Sesión
+            Error al Iniciar Sesión
           </span>
         </Modal.Title>
       </Modal.Header>
@@ -128,33 +138,29 @@ export const ErrorModal = ({ show, onHide, error }) => {
         }}
       >
         <div className="mb-4">
-          <div 
-            className="display-1 mb-3"
-            style={{ color: '#000000' }}
-          >
-            😔
+          <div className="mb-3 d-flex justify-content-center">
+            <img
+              src={nopeImg}
+              alt="Error en inicio de sesión"
+              style={{
+                width: '120px',
+                height: '120px',
+                objectFit: 'contain'
+              }}
+            />
           </div>
-          <h4 
+          <h4
             className="fw-bold mb-3"
-            style={{ 
+            style={{
               color: '#000000',
               fontFamily: "'Indie Flower', cursive"
             }}
           >
             No se pudo iniciar sesión
           </h4>
-          <p 
-            className="fs-5"
-            style={{ 
-              color: '#000000',
-              fontWeight: '500'
-            }}
-          >
-            {error}
-          </p>
-          <p 
+          <p
             className="fs-6"
-            style={{ 
+            style={{
               color: '#000000',
               fontWeight: '400'
             }}
@@ -169,7 +175,7 @@ export const ErrorModal = ({ show, onHide, error }) => {
           backgroundColor: '#87CEEB',
         }}
       >
-        <Button 
+        <Button
           onClick={onHide}
           className="rounded-pill px-5 py-2 border-3 border-dark fw-bold"
           style={{

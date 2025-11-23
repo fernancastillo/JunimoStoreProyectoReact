@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-
-// Importar datos de regiones y comunas
 import regionesComunasData from '../../data/regiones_comunas.json';
 
 const PerfilModal = ({
@@ -17,7 +15,6 @@ const PerfilModal = ({
   const [errores, setErrores] = useState({});
   const [comunasFiltradas, setComunasFiltradas] = useState([]);
 
-  // Inicializar comunas filtradas cuando cambia la región
   useEffect(() => {
     if (formData.region) {
       const regionEncontrada = regionesComunasData.regiones.find(
@@ -35,21 +32,18 @@ const PerfilModal = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (validarFormulario()) {
       onSubmit(e);
     }
   };
 
-  // Función para manejar cambio de región
   const handleRegionChange = (e) => {
     const regionSeleccionada = e.target.value;
-    
-    // Actualizar región y resetear comuna
+
     onChange({ target: { name: 'region', value: regionSeleccionada } });
     onChange({ target: { name: 'comuna', value: '' } });
 
-    // Filtrar comunas según la región seleccionada
     if (regionSeleccionada) {
       const regionEncontrada = regionesComunasData.regiones.find(
         r => r.nombre === regionSeleccionada
@@ -63,7 +57,6 @@ const PerfilModal = ({
       setComunasFiltradas([]);
     }
 
-    // Limpiar errores
     if (errores.region) {
       setErrores(prev => ({
         ...prev,
@@ -72,12 +65,10 @@ const PerfilModal = ({
     }
   };
 
-  // Función para manejar cambio de comuna
   const handleComunaChange = (e) => {
     const comunaSeleccionada = e.target.value;
     onChange({ target: { name: 'comuna', value: comunaSeleccionada } });
 
-    // Limpiar errores
     if (errores.comuna) {
       setErrores(prev => ({
         ...prev,
@@ -88,8 +79,7 @@ const PerfilModal = ({
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    // Limpiar error del campo cuando el usuario empiece a escribir
+
     if (errores[name]) {
       setErrores(prev => ({
         ...prev,
@@ -97,7 +87,6 @@ const PerfilModal = ({
       }));
     }
 
-    // Para teléfono: solo permitir números y limitar a 9 dígitos
     if (name === 'telefono') {
       const soloNumeros = value.replace(/\D/g, '').slice(0, 9);
       onChange({ target: { name, value: soloNumeros } });
@@ -106,86 +95,116 @@ const PerfilModal = ({
     }
   };
 
-  // Función para validar email con dominios específicos
   const validarEmail = (email) => {
     if (!email?.trim()) return 'El correo electrónico es obligatorio';
-    
+
     const dominiosPermitidos = ['gmail.com', 'duoc.cl', 'profesor.duoc.cl'];
     const regex = new RegExp(`^[a-zA-Z0-9._%+-]+@(${dominiosPermitidos.join('|')})$`);
-    
+
     if (!regex.test(email)) {
       return `Solo se permiten correos @duoc.cl, @profesor.duoc.cl o @gmail.com`;
     }
-    
+
     return '';
   };
 
-  // Función para validar teléfono (opcional)
   const validarTelefono = (telefono) => {
-    if (!telefono || telefono.trim() === '') return ''; // Teléfono es opcional
-    
-    // Remover todos los caracteres que no sean números
+    if (!telefono || telefono.trim() === '') return '';
+
     const soloNumeros = telefono.replace(/\D/g, '');
-    
-    // Validar que tenga exactamente 9 dígitos y empiece con 9
+
     if (soloNumeros.length !== 9) {
       return 'El teléfono debe tener 9 dígitos';
     }
-    
+
     if (!soloNumeros.startsWith('9')) {
       return 'El teléfono debe empezar con 9';
     }
-    
+
     return '';
   };
 
-  // Función para validar dirección (OBLIGATORIA)
   const validarDireccion = (direccion) => {
     if (!direccion?.trim()) return 'La dirección es obligatoria';
-    
+
     if (direccion.trim().length < 5) {
       return 'La dirección debe tener al menos 5 caracteres';
     }
-    
+
     if (direccion.trim().length > 100) {
       return 'La dirección no puede tener más de 100 caracteres';
     }
-    
+
     return '';
+  };
+
+  const validarNombre = (nombre) => {
+    if (!nombre?.trim()) return 'El nombre es obligatorio';
+    if (nombre.trim().length < 3) return 'El nombre debe tener al menos 3 caracteres';
+    return '';
+  };
+
+  const validarApellidos = (apellidos) => {
+    if (!apellidos?.trim()) return 'Los apellidos son obligatorios';
+    if (apellidos.trim().length < 3) return 'Los apellidos deben tener al menos 3 caracteres';
+    return '';
+  };
+
+  const validarPassword = (password) => {
+    if (password && password.trim()) {
+      if (password.length < 6 || password.length > 10) {
+        return 'La contraseña debe tener entre 6 y 10 caracteres';
+      }
+    }
+    return '';
+  };
+
+  const validarConfirmarPassword = (password, confirmarPassword) => {
+    if (password && password.trim()) {
+      if (!confirmarPassword) {
+        return 'Debes confirmar la contraseña';
+      }
+      if (password !== confirmarPassword) {
+        return 'Las contraseñas no coinciden';
+      }
+    }
+    return '';
+  };
+
+  const calcularEdad = (fechaNacimiento) => {
+    const hoy = new Date();
+    const fechaNac = new Date(fechaNacimiento);
+
+    let edad = hoy.getFullYear() - fechaNac.getFullYear();
+    const mes = hoy.getMonth() - fechaNac.getMonth();
+
+    if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+      edad--;
+    }
+
+    return edad;
   };
 
   const validarFormulario = () => {
     const nuevosErrores = {};
 
-    // Validar nombre (mínimo 3 caracteres)
-    if (!formData.nombre?.trim()) {
-      nuevosErrores.nombre = 'El nombre es obligatorio';
-    } else if (formData.nombre.trim().length < 3) {
-      nuevosErrores.nombre = 'El nombre debe tener al menos 3 caracteres';
-    }
+    const errorNombre = validarNombre(formData.nombre);
+    if (errorNombre) nuevosErrores.nombre = errorNombre;
 
-    // Validar apellidos (mínimo 3 caracteres)
-    if (!formData.apellidos?.trim()) {
-      nuevosErrores.apellidos = 'Los apellidos son obligatorios';
-    } else if (formData.apellidos.trim().length < 3) {
-      nuevosErrores.apellidos = 'Los apellidos deben tener al menos 3 caracteres';
-    }
+    const errorApellidos = validarApellidos(formData.apellidos);
+    if (errorApellidos) nuevosErrores.apellidos = errorApellidos;
 
-    // Validar email con dominios específicos
     const errorEmail = validarEmail(formData.correo);
     if (errorEmail) nuevosErrores.correo = errorEmail;
 
-    // Validar teléfono (opcional)
     if (formData.telefono && formData.telefono.trim() !== '') {
       const errorTelefono = validarTelefono(formData.telefono);
       if (errorTelefono) nuevosErrores.telefono = errorTelefono;
     }
 
-    // ✅ Validar dirección (OBLIGATORIA)
     const errorDireccion = validarDireccion(formData.direccion);
     if (errorDireccion) nuevosErrores.direccion = errorDireccion;
 
-    // Validar región y comuna (si se selecciona una, debe seleccionar la otra)
     if (formData.region && !formData.comuna) {
       nuevosErrores.comuna = 'Debe seleccionar una comuna para la región elegida';
     }
@@ -193,38 +212,23 @@ const PerfilModal = ({
       nuevosErrores.region = 'Debe seleccionar una región para la comuna elegida';
     }
 
-    // Validar fecha de nacimiento (mayor a 10 años si se proporciona)
     if (formData.fecha_nacimiento) {
       const fechaNacimiento = new Date(formData.fecha_nacimiento);
       const hoy = new Date();
-      const edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
-      const mes = hoy.getMonth() - fechaNacimiento.getMonth();
-      
-      let edadCalculada = edad;
-      if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNacimiento.getDate())) {
-        edadCalculada--;
-      }
-      
+      const edad = calcularEdad(formData.fecha_nacimiento);
+
       if (fechaNacimiento > hoy) {
         nuevosErrores.fecha_nacimiento = 'La fecha de nacimiento no puede ser futura';
-      } else if (edadCalculada < 10) {
+      } else if (edad < 10) {
         nuevosErrores.fecha_nacimiento = 'Debe ser mayor de 10 años';
       }
     }
 
-    // Validar contraseña (4-10 caracteres si se proporciona)
-    if (formData.password && formData.password.trim()) {
-      if (formData.password.length < 4 || formData.password.length > 10) {
-        nuevosErrores.password = 'La contraseña debe tener entre 4 y 10 caracteres';
-      }
+    const errorPassword = validarPassword(formData.password);
+    if (errorPassword) nuevosErrores.password = errorPassword;
 
-      // Validar confirmación de contraseña
-      if (!formData.confirmarPassword) {
-        nuevosErrores.confirmarPassword = 'Debe confirmar la contraseña';
-      } else if (formData.password !== formData.confirmarPassword) {
-        nuevosErrores.confirmarPassword = 'Las contraseñas no coinciden';
-      }
-    }
+    const errorConfirmarPassword = validarConfirmarPassword(formData.password, formData.confirmarPassword);
+    if (errorConfirmarPassword) nuevosErrores.confirmarPassword = errorConfirmarPassword;
 
     setErrores(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
@@ -245,14 +249,14 @@ const PerfilModal = ({
               <i className="bi bi-pencil-square me-2"></i>
               Editar Perfil
             </h5>
-            <button 
-              type="button" 
-              className="btn-close btn-close-white" 
+            <button
+              type="button"
+              className="btn-close btn-close-white"
               onClick={onClose}
               disabled={guardando}
             ></button>
           </div>
-          
+
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
               <div className="row">
@@ -261,8 +265,8 @@ const PerfilModal = ({
                     <label className="form-label fw-bold">
                       Nombre <span className="text-danger">*</span>
                     </label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       className={getInputClass('nombre')}
                       name="nombre"
                       value={formData.nombre || ''}
@@ -287,8 +291,8 @@ const PerfilModal = ({
                     <label className="form-label fw-bold">
                       Apellidos <span className="text-danger">*</span>
                     </label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       className={getInputClass('apellidos')}
                       name="apellidos"
                       value={formData.apellidos || ''}
@@ -314,8 +318,8 @@ const PerfilModal = ({
                 <label className="form-label fw-bold">
                   Correo Electrónico <span className="text-danger">*</span>
                 </label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   className={getInputClass('correo')}
                   name="correo"
                   value={formData.correo || ''}
@@ -336,8 +340,8 @@ const PerfilModal = ({
 
               <div className="mb-3">
                 <label className="form-label fw-bold">Teléfono</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   className={getInputClass('telefono')}
                   name="telefono"
                   value={formData.telefono || ''}
@@ -356,13 +360,12 @@ const PerfilModal = ({
                 </small>
               </div>
 
-              {/* ✅ DIRECCIÓN OBLIGATORIA */}
               <div className="mb-3">
                 <label className="form-label fw-bold">
                   Dirección <span className="text-danger">*</span>
                 </label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   className={getInputClass('direccion')}
                   name="direccion"
                   value={formData.direccion || ''}
@@ -383,9 +386,7 @@ const PerfilModal = ({
                 </small>
               </div>
 
-              {/* ✅ REGIÓN Y COMUNA COMO COMBOBOX */}
               <div className="row">
-                {/* ✅ REGIÓN PRIMERO (IZQUIERDA) */}
                 <div className="col-md-6">
                   <div className="mb-3">
                     <label className="form-label fw-bold">Región</label>
@@ -411,7 +412,6 @@ const PerfilModal = ({
                   </div>
                 </div>
 
-                {/* ✅ COMUNA DESPUÉS (DERECHA) */}
                 <div className="col-md-6">
                   <div className="mb-3">
                     <label className="form-label fw-bold">Comuna</label>
@@ -444,8 +444,8 @@ const PerfilModal = ({
 
               <div className="mb-3">
                 <label className="form-label fw-bold">Fecha de Nacimiento</label>
-                <input 
-                  type="date" 
+                <input
+                  type="date"
                   className={getInputClass('fecha_nacimiento')}
                   name="fecha_nacimiento"
                   value={formData.fecha_nacimiento || ''}
@@ -464,10 +464,12 @@ const PerfilModal = ({
 
               <hr />
 
+              <h6 className="fw-bold mb-3">Cambiar Contraseña (Opcional)</h6>
+
               <div className="mb-3">
                 <label className="form-label fw-bold">Nueva Contraseña</label>
                 <div className="input-group">
-                  <input 
+                  <input
                     type={mostrarPassword ? "text" : "password"}
                     className={getInputClass('password')}
                     name="password"
@@ -476,7 +478,7 @@ const PerfilModal = ({
                     placeholder="Dejar vacío para mantener la actual"
                     maxLength="10"
                   />
-                  <button 
+                  <button
                     type="button"
                     className="btn btn-outline-secondary"
                     onClick={() => setMostrarPassword(!mostrarPassword)}
@@ -490,13 +492,13 @@ const PerfilModal = ({
                     {errores.password}
                   </div>
                 )}
-                <small className="text-muted">Entre 4 y 10 caracteres (opcional)</small>
+                <small className="text-muted">Entre 6 y 10 caracteres (opcional)</small>
               </div>
 
               <div className="mb-3">
                 <label className="form-label fw-bold">Confirmar Contraseña</label>
                 <div className="input-group">
-                  <input 
+                  <input
                     type={mostrarConfirmarPassword ? "text" : "password"}
                     className={getInputClass('confirmarPassword')}
                     name="confirmarPassword"
@@ -505,7 +507,7 @@ const PerfilModal = ({
                     placeholder="Repetir contraseña"
                     maxLength="10"
                   />
-                  <button 
+                  <button
                     type="button"
                     className="btn btn-outline-secondary"
                     onClick={() => setMostrarConfirmarPassword(!mostrarConfirmarPassword)}
@@ -529,17 +531,17 @@ const PerfilModal = ({
             </div>
 
             <div className="modal-footer">
-              <button 
-                type="button" 
-                className="btn btn-secondary" 
+              <button
+                type="button"
+                className="btn btn-secondary"
                 onClick={onClose}
                 disabled={guardando}
               >
                 <i className="bi bi-x-circle me-2"></i>
                 Cancelar
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn btn-primary"
                 disabled={guardando}
               >

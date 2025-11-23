@@ -1,4 +1,3 @@
-// src/utils/admin/useUsuarios.js
 import { useState, useEffect, useCallback } from 'react';
 import { usuarioService } from './usuarioService';
 import { calcularEstadisticasUsuarios, aplicarFiltrosUsuarios } from './usuarioStats';
@@ -18,9 +17,10 @@ export const useUsuarios = () => {
     tipo: ''
   });
 
-  // Estado para el mensaje de éxito
   const [successMessage, setSuccessMessage] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [error, setError] = useState(null);
+  const [conexionInfo, setConexionInfo] = useState(null);
 
   useEffect(() => {
     loadUsuarios();
@@ -31,26 +31,44 @@ export const useUsuarios = () => {
     setUsuariosFiltrados(filtered);
   }, [usuarios, filtros]);
 
+  const verificarConexion = async () => {
+    try {
+      const info = await usuarioService.verificarConexion();
+      setConexionInfo(info);
+    } catch (error) {
+      setConexionInfo({
+        conectado: false,
+        mensaje: 'Error verificando conexión'
+      });
+    }
+  };
+
   const loadUsuarios = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
+
       const data = await usuarioService.getUsuarios();
       setUsuarios(data);
+
     } catch (error) {
-      console.error('Error cargando usuarios:', error);
+      setError(error.message);
+      setUsuarios([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Función para limpiar el mensaje de éxito
   const clearSuccessMessage = () => {
     setShowSuccessMessage(false);
     setSuccessMessage('');
   };
 
+  const clearError = () => {
+    setError(null);
+  };
+
   const handleEdit = (usuario) => {
-    // Validar que no sea administrador
     if (usuario.tipo === 'Admin') {
       alert('No se pueden editar usuarios administradores');
       return;
@@ -61,51 +79,45 @@ export const useUsuarios = () => {
 
   const handleUpdateUsuario = async (run, datosActualizados) => {
     try {
-      // Validar que no se esté intentando modificar un administrador
-      const usuarioOriginal = usuarios.find(u => u.run === run);
+      const usuarioOriginal = usuarios.find(u => u.run.toString() === run.toString());
       if (usuarioOriginal && usuarioOriginal.tipo === 'Admin') {
         throw new Error('No se pueden modificar usuarios administradores');
       }
-      
+
       await usuarioService.updateUsuario(run, datosActualizados);
       await loadUsuarios();
-      
-      // Mostrar mensaje de éxito para actualización
-      setSuccessMessage('¡Usuario actualizado con éxito!');
+
+      setSuccessMessage('Usuario actualizado con éxito');
       setShowSuccessMessage(true);
-      
+
       setTimeout(() => {
         setShowSuccessMessage(false);
       }, 3000);
-      
+
     } catch (error) {
-      console.error('Error actualizando usuario:', error);
       throw error;
     }
   };
 
   const handleDelete = async (run) => {
     try {
-      // Validar que no sea administrador
-      const usuario = usuarios.find(u => u.run === run);
+      const usuario = usuarios.find(u => u.run.toString() === run.toString());
       if (usuario && usuario.tipo === 'Admin') {
         throw new Error('No se pueden eliminar usuarios administradores');
       }
-      
+
       await usuarioService.deleteUsuario(run);
       await loadUsuarios();
-      
-      // Mostrar mensaje de éxito para eliminación
-      setSuccessMessage('¡Usuario eliminado con éxito!');
+
+      setSuccessMessage('Usuario eliminado con éxito');
       setShowSuccessMessage(true);
-      
+
       setTimeout(() => {
         setShowSuccessMessage(false);
       }, 3000);
-      
+
       return { success: true };
     } catch (error) {
-      console.error('Error eliminando usuario:', error);
       return { success: false, error: error.message };
     }
   };
@@ -122,7 +134,6 @@ export const useUsuarios = () => {
 
   const handleCreateUsuario = async (usuarioData) => {
     try {
-      // Verificar si el RUN ya existe
       const usuarioExistente = await usuarioService.getUsuarioByRun(usuarioData.run);
       if (usuarioExistente) {
         throw new Error('Ya existe un usuario con este RUN');
@@ -131,17 +142,15 @@ export const useUsuarios = () => {
       await usuarioService.createUsuario(usuarioData);
       await loadUsuarios();
       setShowCreateModal(false);
-      
-      // Mostrar mensaje de éxito para creación
-      setSuccessMessage('¡Usuario creado con éxito!');
+
+      setSuccessMessage('Usuario creado con éxito');
       setShowSuccessMessage(true);
-      
+
       setTimeout(() => {
         setShowSuccessMessage(false);
       }, 3000);
-      
+
     } catch (error) {
-      console.error('Error creando usuario:', error);
       throw error;
     }
   };
@@ -170,12 +179,12 @@ export const useUsuarios = () => {
 
   const refreshData = () => {
     loadUsuarios();
+    verificarConexion();
   };
 
   const estadisticas = calcularEstadisticasUsuarios(usuarios);
 
   return {
-    // Estados
     usuarios,
     usuariosFiltrados,
     loading,
@@ -185,13 +194,12 @@ export const useUsuarios = () => {
     creatingUsuario,
     filtros,
     estadisticas,
-    
-    // Exportar los estados y funciones del mensaje
+    error,
+    conexionInfo,
     successMessage,
     showSuccessMessage,
     clearSuccessMessage,
-    
-    // Acciones
+    clearError,
     handleEdit,
     handleUpdateUsuario,
     handleDelete,
@@ -202,8 +210,6 @@ export const useUsuarios = () => {
     handleFiltroChange,
     handleLimpiarFiltros,
     refreshData,
-    
-    // Aliases para consistencia
     onEdit: handleEdit,
     onUpdate: handleUpdateUsuario,
     onDelete: handleDelete,

@@ -1,10 +1,8 @@
 import { formatCurrency, formatDate } from '../../utils/admin/dashboardUtils';
 
 const OrdenesTable = ({ ordenes, onEdit, onDelete, onUpdateEstado }) => {
-  
-  // Función para manejar la eliminación de orden
+
   const handleEliminarOrden = async (orden) => {
-    // Mensaje de confirmación más específico
     const mensajeConfirmacion = `
 ¿Estás seguro de que quieres eliminar la orden ${orden.numeroOrden}?
 
@@ -21,42 +19,40 @@ const OrdenesTable = ({ ordenes, onEdit, onDelete, onUpdateEstado }) => {
         if (!resultado.success) {
           alert(`Error al eliminar orden: ${resultado.error}`);
         }
-        // No mostrar mensaje de éxito - eliminación silenciosa
       } catch (error) {
         alert('Error inesperado al eliminar la orden');
       }
     }
   };
 
-  // Función para obtener el texto y clase del badge según el estado
   const getEstadoInfo = (estado) => {
     const estadoMap = {
-      'Pendiente': { 
-        text: 'Pendiente', 
-        class: 'pendiente-custom text-dark', 
-        icon: 'bi-clock' 
+      'Pendiente': {
+        text: 'Pendiente',
+        class: 'pendiente-custom text-dark',
+        icon: 'bi-clock'
       },
-      'Enviado': { 
-        text: 'Enviado', 
-        class: 'enviado-custom text-dark', 
-        icon: 'bi-truck' 
+      'Enviado': {
+        text: 'Enviado',
+        class: 'enviado-custom text-dark',
+        icon: 'bi-truck'
       },
-      'Entregado': { 
-        text: 'Entregado', 
+      'Entregado': {
+        text: 'Entregado',
         class: 'entregado-custom text-dark',
-        icon: 'bi-check-circle' 
+        icon: 'bi-check-circle'
       },
-      'Cancelado': { 
-        text: 'Cancelado', 
+      'Cancelado': {
+        text: 'Cancelado',
         class: 'cancelado-custom text-dark',
-        icon: 'bi-x-circle' 
+        icon: 'bi-x-circle'
       }
     };
-    
-    return estadoMap[estado] || { 
-      text: estado, 
-      class: 'bg-secondary text-dark', 
-      icon: 'bi-question' 
+
+    return estadoMap[estado] || {
+      text: estado,
+      class: 'bg-secondary text-dark',
+      icon: 'bi-question'
     };
   };
 
@@ -66,7 +62,6 @@ const OrdenesTable = ({ ordenes, onEdit, onDelete, onUpdateEstado }) => {
         <h6 className="m-0 font-weight-bold text-primary">Lista de Órdenes</h6>
       </div>
       <div className="card-body">
-        {/* Estilos personalizados para todos los badges */}
         <style>
           {`
             .pendiente-custom {
@@ -108,7 +103,7 @@ const OrdenesTable = ({ ordenes, onEdit, onDelete, onUpdateEstado }) => {
             <tbody>
               {ordenes.map((orden) => {
                 const estadoInfo = getEstadoInfo(orden.estadoEnvio);
-                
+
                 return (
                   <tr key={orden.numeroOrden}>
                     <td>
@@ -139,17 +134,15 @@ const OrdenesTable = ({ ordenes, onEdit, onDelete, onUpdateEstado }) => {
                         >
                           <i className="bi bi-eye"></i>
                         </button>
-                        {/* ✅ NUEVO BOTÓN ELIMINAR */}
                         <button
                           className="btn btn-danger"
                           onClick={() => handleEliminarOrden(orden)}
                           title="Eliminar orden"
-                          disabled={orden.estadoEnvio === 'Entregado'} // Deshabilitar para órdenes entregadas
+                          disabled={orden.estadoEnvio === 'Entregado'}
                         >
                           <i className="bi bi-trash"></i>
                         </button>
                       </div>
-                      {/* Mensaje para órdenes entregadas */}
                       {orden.estadoEnvio === 'Entregado' && (
                         <small className="text-muted d-block mt-1">
                           No se puede eliminar
@@ -162,7 +155,7 @@ const OrdenesTable = ({ ordenes, onEdit, onDelete, onUpdateEstado }) => {
             </tbody>
           </table>
         </div>
-        
+
         {ordenes.length === 0 && (
           <div className="text-center py-4">
             <i className="bi bi-inbox fa-3x text-muted mb-3"></i>

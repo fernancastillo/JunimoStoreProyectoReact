@@ -4,16 +4,32 @@ import { generarBoletaOrden, generarBoletaCSV, generarBoletaTexto } from '../../
 
 const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
   const [showSelectorFormato, setShowSelectorFormato] = useState(false);
+  const [actionError, setActionError] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   if (!show || !orden) return null;
 
   const handleEstadoChange = async (nuevoEstado) => {
     if (window.confirm(`¿Cambiar estado de orden ${orden.numeroOrden} a "${nuevoEstado}"?`)) {
       try {
-        await onUpdateEstado(orden.numeroOrden, nuevoEstado);
-        onClose();
+        setIsUpdating(true);
+        setActionError('');
+
+        console.log('Iniciando cambio de estado en modal...');
+        const resultado = await onUpdateEstado(orden.numeroOrden, nuevoEstado);
+
+        if (!resultado.success) {
+          console.error('Error en cambio de estado:', resultado.error);
+          setActionError(resultado.error || 'No se pudo actualizar el estado');
+        } else {
+          console.log('Estado cambiado exitosamente desde modal');
+          onClose();
+        }
       } catch (error) {
-        alert('Error al actualizar el estado');
+        console.error('Error inesperado:', error);
+        setActionError('Error al actualizar el estado: ' + error.message);
+      } finally {
+        setIsUpdating(false);
       }
     }
   };
@@ -24,7 +40,7 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
 
   const handleSeleccionFormato = async (formato) => {
     setShowSelectorFormato(false);
-    
+
     try {
       switch (formato) {
         case 'html':
@@ -39,10 +55,8 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
         default:
           await generarBoletaOrden(orden);
       }
-      // ❌ ELIMINADO: Todos los mensajes de éxito
     } catch (error) {
-      // ✅ MANTENIDO: Solo mostrar errores
-      alert('Error al generar la boleta: ' + error.message);
+      setActionError('Error al generar la boleta: ' + error.message);
     }
   };
 
@@ -50,7 +64,6 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
     setShowSelectorFormato(false);
   };
 
-  // Estilos para los botones de estado
   const botonesEstado = [
     {
       estado: 'Pendiente',
@@ -84,7 +97,6 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
 
   return (
     <>
-      {/* Modal principal de detalles de orden */}
       <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
         <div className="modal-dialog modal-lg">
           <div className="modal-content">
@@ -96,7 +108,29 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
               <button type="button" className="btn-close" onClick={onClose}></button>
             </div>
             <div className="modal-body">
-              {/* Información general */}
+
+              {actionError && (
+                <div className="alert alert-danger alert-dismissible fade show" role="alert">
+                  <strong>Error:</strong> {actionError}
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setActionError('')}
+                  ></button>
+                </div>
+              )}
+
+              {isUpdating && (
+                <div className="alert alert-info">
+                  <div className="d-flex align-items-center">
+                    <div className="spinner-border spinner-border-sm me-2" role="status">
+                      <span className="visually-hidden">Actualizando...</span>
+                    </div>
+                    Actualizando estado...
+                  </div>
+                </div>
+              )}
+
               <div className="row mb-4">
                 <div className="col-md-6">
                   <div className="card h-100">
@@ -130,7 +164,7 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="col-md-6">
                   <div className="card h-100">
                     <div className="card-header bg-light">
@@ -142,18 +176,18 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
                     <div className="card-body">
                       <div className="text-center mb-3">
                         <span className={`badge ${getEstadoBadge(orden.estadoEnvio)} fs-6 p-2`}>
-                          <i className="bi me-2"></i>
                           {orden.estadoEnvio}
                         </span>
                       </div>
-                      
+
                       <div className="d-grid gap-2">
-                        {botonesEstado.map((boton) => 
+                        {botonesEstado.map((boton) =>
                           boton.mostrar && (
-                            <button 
+                            <button
                               key={boton.estado}
                               className={`btn ${boton.clase} btn-sm`}
                               onClick={() => handleEstadoChange(boton.estado)}
+                              disabled={isUpdating}
                             >
                               <i className={`${boton.icono} me-2`}></i>
                               {boton.label}
@@ -166,7 +200,6 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
                 </div>
               </div>
 
-              {/* Productos de la orden */}
               <div className="card">
                 <div className="card-header bg-light">
                   <h6 className="mb-0 fw-bold">
@@ -215,15 +248,21 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
               </div>
             </div>
             <div className="modal-footer">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="btn btn-success"
                 onClick={handleDescargarBoleta}
+                disabled={isUpdating}
               >
                 <i className="bi bi-download me-2"></i>
                 Descargar Boleta
               </button>
-              <button type="button" className="btn btn-secondary" onClick={onClose}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={onClose}
+                disabled={isUpdating}
+              >
                 <i className="bi bi-x-circle me-2"></i>
                 Cerrar
               </button>
@@ -232,7 +271,6 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
         </div>
       </div>
 
-      {/* Modal para seleccionar formato de boleta */}
       {showSelectorFormato && (
         <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
           <div className="modal-dialog modal-sm">
@@ -247,7 +285,7 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
               <div className="modal-body">
                 <p className="text-muted mb-3">Elige el formato para descargar la boleta:</p>
                 <div className="d-grid gap-2">
-                  <button 
+                  <button
                     className="btn btn-outline-primary text-start"
                     onClick={() => handleSeleccionFormato('html')}
                   >
@@ -256,7 +294,7 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
                     <br />
                     <small className="text-muted">Para imprimir y mejor visualización</small>
                   </button>
-                  <button 
+                  <button
                     className="btn btn-outline-success text-start"
                     onClick={() => handleSeleccionFormato('csv')}
                   >
@@ -265,7 +303,7 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
                     <br />
                     <small className="text-muted">Para abrir en Excel</small>
                   </button>
-                  <button 
+                  <button
                     className="btn btn-outline-secondary text-start"
                     onClick={() => handleSeleccionFormato('txt')}
                   >
@@ -277,9 +315,9 @@ const OrdenModal = ({ show, orden, onClose, onUpdateEstado }) => {
                 </div>
               </div>
               <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-outline-secondary" 
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
                   onClick={handleCerrarSelector}
                 >
                   Cancelar

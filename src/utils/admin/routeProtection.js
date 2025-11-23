@@ -1,4 +1,4 @@
-import { authService } from '../tienda/auth';
+import { authService } from '../tienda/authService';
 
 /**
  * Verifica si el usuario puede acceder al admin
@@ -8,20 +8,16 @@ export const canAccessAdmin = () => {
   if (!authService.isAuthenticated()) {
     return false;
   }
-  
+
   const currentUser = authService.getCurrentUser();
-  console.log('🔍 Verificando acceso admin para usuario:', currentUser);
-  
-  // ✅ CORREGIDO: Verificar múltiples tipos de admin
+
+  // Verificar múltiples tipos de admin
   const userType = currentUser?.tipo || currentUser?.type || '';
-  const isAdmin = userType === 'Admin' || 
-                  userType === 'Administrador' || 
-                  userType === 'admin' ||
-                  userType === 'administrador';
-  
-  console.log('👤 Tipo de usuario:', userType);
-  console.log('🔑 Es admin:', isAdmin);
-  
+  const isAdmin = userType === 'Admin' ||
+    userType === 'Administrador' ||
+    userType === 'admin' ||
+    userType === 'administrador';
+
   return isAdmin;
 };
 
@@ -31,24 +27,20 @@ export const canAccessAdmin = () => {
  */
 export const getRedirectRoute = () => {
   if (!authService.isAuthenticated()) {
-    console.log('🔐 Usuario no autenticado, redirigiendo a login');
     return '/login';
   }
-  
+
   const currentUser = authService.getCurrentUser();
   const userType = currentUser?.tipo || currentUser?.type || '';
-  const isAdmin = userType === 'Admin' || 
-                  userType === 'Administrador' || 
-                  userType === 'admin' ||
-                  userType === 'administrador';
-  
+  const isAdmin = userType === 'Admin' ||
+    userType === 'Administrador' ||
+    userType === 'admin' ||
+    userType === 'administrador';
+
   if (!isAdmin) {
-    console.log('🚫 Usuario no es admin, redirigiendo a index');
-    console.log('👤 Tipo de usuario detectado:', userType);
     return '/index';
   }
-  
-  console.log('✅ Usuario es admin, permitiendo acceso');
+
   return null; // No redirigir, puede acceder
 };
 
@@ -58,7 +50,7 @@ export const getRedirectRoute = () => {
 export const useAdminAccess = () => {
   const canAccess = canAccessAdmin();
   const redirectTo = getRedirectRoute();
-  
+
   return {
     canAccess,
     redirectTo,

@@ -14,14 +14,35 @@ const SuccessAlert = ({ message, show, onClose }) => {
   if (!show) return null;
 
   return (
-    <div className="alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3 shadow-lg" 
-         style={{ zIndex: 9999, minWidth: '300px' }} role="alert">
+    <div className="alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3 shadow-lg"
+      style={{ zIndex: 9999, minWidth: '300px' }} role="alert">
       <div className="d-flex align-items-center">
         <i className="bi bi-check-circle-fill me-2 fs-5"></i>
         <strong>{message}</strong>
-        <button 
-          type="button" 
-          className="btn-close ms-2" 
+        <button
+          type="button"
+          className="btn-close ms-2"
+          onClick={onClose}
+          aria-label="Cerrar"
+        ></button>
+      </div>
+    </div>
+  );
+};
+
+// Componente para mensaje de error
+const ErrorAlert = ({ message, show, onClose }) => {
+  if (!show || !message) return null;
+
+  return (
+    <div className="alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3 shadow-lg"
+      style={{ zIndex: 9999, minWidth: '300px' }} role="alert">
+      <div className="d-flex align-items-center">
+        <i className="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+        <strong>Error: {message}</strong>
+        <button
+          type="button"
+          className="btn-close ms-2"
           onClick={onClose}
           aria-label="Cerrar"
         ></button>
@@ -40,10 +61,11 @@ const Usuarios = () => {
     showCreateModal,
     filtros,
     estadisticas,
-    // Recibir los nuevos estados y funciones
+    error,
     successMessage,
     showSuccessMessage,
     clearSuccessMessage,
+    clearError,
     handleEdit,
     handleUpdateUsuario,
     handleDelete,
@@ -52,12 +74,12 @@ const Usuarios = () => {
     handleCloseModal,
     handleCloseCreateModal,
     handleFiltroChange,
-    handleLimpiarFiltros
+    handleLimpiarFiltros,
+    refreshData
   } = useUsuarios();
 
   const [showReporteModal, setShowReporteModal] = useState(false);
 
-  // Aplicar el fondo al body
   useEffect(() => {
     document.body.style.backgroundImage = 'url("../src/assets/tienda/fondostardew.png")';
     document.body.style.backgroundSize = 'cover';
@@ -67,8 +89,7 @@ const Usuarios = () => {
     document.body.style.margin = '0';
     document.body.style.padding = '0';
     document.body.style.minHeight = '100vh';
-    
-    // Limpiar cuando el componente se desmonte
+
     return () => {
       document.body.style.backgroundImage = '';
       document.body.style.backgroundSize = '';
@@ -82,19 +103,16 @@ const Usuarios = () => {
   }, []);
 
   const handleGenerarReporte = (formato) => {
-    // Si el usuario elige CSV, abre el modal para escoger tipo (CSV o CSV Excel)
     if (formato === 'csv') {
       setShowReporteModal(true);
       return;
     }
 
-    // Si el usuario elige JSON, genera directamente el archivo
     if (formato === 'json') {
       generarReporteUsuarios('json', usuariosFiltrados, estadisticas);
       return;
     }
 
-    // Otros formatos adicionales (por compatibilidad futura)
     generarReporteUsuarios(formato, usuariosFiltrados, estadisticas);
   };
 
@@ -107,8 +125,14 @@ const Usuarios = () => {
     return (
       <div className="container-fluid" style={{ padding: '20px', minHeight: '100vh' }}>
         <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-          <div className="spinner-border text-white" role="status">
-            <span className="visually-hidden">Cargando...</span>
+          <div className="text-center text-white">
+            <div className="spinner-border text-white mb-3" role="status">
+              <span className="visually-hidden">Cargando...</span>
+            </div>
+            <div>
+              <h5 className="mb-2">Cargando usuarios</h5>
+              <p className="text-light mb-0">Conectando con la base de datos...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -117,19 +141,29 @@ const Usuarios = () => {
 
   return (
     <div className="container-fluid" style={{ padding: '20px', minHeight: '100vh' }}>
-      
+
       {/* Mensaje de éxito */}
-      <SuccessAlert 
+      <SuccessAlert
         message={successMessage}
         show={showSuccessMessage}
         onClose={clearSuccessMessage}
       />
 
-      {/* Header */}
+      {/* Mensaje de error */}
+      <ErrorAlert
+        message={error}
+        show={!!error}
+        onClose={clearError}
+      />
+
+      {/* Header - SOLO el título */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="h3 mb-0 text-white fw-bold" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}>
-          Gestión de Usuarios
-        </h1>
+        <div>
+          <h1 className="h3 mb-0 text-white fw-bold" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}>
+            Gestión de Usuarios
+          </h1>
+          {/* Se eliminó el texto "Base de datos Oracle Cloud • X usuarios registrados" */}
+        </div>
         <div className="d-flex flex-wrap gap-2">
           <button
             className="btn btn-success shadow"
@@ -138,6 +172,7 @@ const Usuarios = () => {
             <i className="bi bi-person-plus me-2"></i>
             Crear Usuario
           </button>
+          {/* Se eliminó el botón Actualizar */}
           <button
             className="btn btn-primary shadow"
             onClick={() => handleGenerarReporte('csv')}
@@ -154,6 +189,8 @@ const Usuarios = () => {
           </button>
         </div>
       </div>
+
+      {/* Se eliminó el componente ConexionInfo */}
 
       {/* Estadísticas */}
       <UsuariosStats estadisticas={estadisticas} />
