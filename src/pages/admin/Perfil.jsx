@@ -14,12 +14,14 @@ const Perfil = () => {
     guardando,
     mensaje,
     showModal,
+    cambioContrasenha, // ← AÑADIR ESTA LÍNEA
     handleChange,
     handleSubmit,
     handleDelete,
     setMensaje,
     cargarPerfil,
-    setShowModal
+    setShowModal,
+    setCambioContrasenha // ← AÑADIR ESTA LÍNEA
   } = usePerfil();
 
   // Aplicar el fondo al body
@@ -198,11 +200,14 @@ const Perfil = () => {
         usuario={usuario}
         formData={formData}
         guardando={guardando}
+        cambioContrasenha={cambioContrasenha} // ← AÑADIR ESTA PROP
         onClose={() => {
           setShowModal(false);
+          setCambioContrasenha(false); // ← Resetear al cerrar el modal
         }}
         onChange={handleChange}
         onSubmit={handleSubmit}
+        setCambioContrasenha={setCambioContrasenha} // ← AÑADIR ESTA PROP
       />
     </div>
   );
