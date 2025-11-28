@@ -1,65 +1,120 @@
-const OrdenesFiltros = ({ filtros, onFiltroChange, onLimpiarFiltros, resultados }) => {
+const ProductosFiltros = ({ filtros, onFiltroChange, onLimpiarFiltros, resultados, categorias }) => {
   return (
     <div className="card shadow mb-4">
       <div className="card-header py-3">
         <h6 className="m-0 font-weight-bold text-primary">
           <i className="bi bi-funnel me-2"></i>
-          Filtros y Ordenamiento
+          Filtros y Ordenamiento de Productos
         </h6>
       </div>
       <div className="card-body">
         <div className="row g-3">
-          <div className="col-md-3">
-            <label className="form-label small fw-bold">Número de Orden</label>
+          {/* Filtro por Código */}
+          <div className="col-md-2">
+            <label className="form-label small fw-bold">Código</label>
             <input
               type="text"
               className="form-control form-control-sm"
-              name="numeroOrden"
-              value={filtros.numeroOrden}
+              name="codigo"
+              value={filtros.codigo}
               onChange={onFiltroChange}
-              placeholder="Buscar por número..."
+              placeholder="Buscar por código..."
             />
           </div>
           
+          {/* Filtro por Nombre */}
           <div className="col-md-2">
-            <label className="form-label small fw-bold">RUN Cliente</label>
+            <label className="form-label small fw-bold">Nombre</label>
             <input
               type="text"
               className="form-control form-control-sm"
-              name="run"
-              value={filtros.run}
+              name="nombre"
+              value={filtros.nombre}
               onChange={onFiltroChange}
-              placeholder="Buscar por RUN..."
+              placeholder="Buscar por nombre..."
             />
           </div>
           
+          {/* Filtro por Categoría */}
           <div className="col-md-2">
-            <label className="form-label small fw-bold">Estado</label>
+            <label className="form-label small fw-bold">Categoría</label>
             <select
               className="form-select form-select-sm"
-              name="estado"
-              value={filtros.estado}
+              name="categoria"
+              value={filtros.categoria}
               onChange={onFiltroChange}
             >
-              <option value="">Todos los estados</option>
-              <option value="Pendiente">Pendiente</option>
-              <option value="Enviado">Enviado</option>
-              <option value="Entregado">Entregado</option>
-              <option value="Cancelado">Cancelado</option>
+              <option value="">Todas las categorías</option>
+              {categorias.map(categoria => (
+                <option key={categoria} value={categoria}>
+                  {categoria}
+                </option>
+              ))}
             </select>
           </div>
           
+          {/* Filtro por Estado de Stock */}
           <div className="col-md-2">
-            <label className="form-label small fw-bold">Fecha</label>
-            <input
-              type="date"
-              className="form-control form-control-sm"
-              name="fecha"
-              value={filtros.fecha}
+            <label className="form-label small fw-bold">Estado Stock</label>
+            <select
+              className="form-select form-select-sm"
+              name="estadoStock"
+              value={filtros.estadoStock}
               onChange={onFiltroChange}
+            >
+              <option value="">Todos los estados</option>
+              <option value="sin-stock">Sin Stock</option>
+              <option value="critico">Stock Crítico</option>
+              <option value="normal">Stock Normal</option>
+            </select>
+          </div>
+          
+          {/* Filtro por Precio Mínimo */}
+          <div className="col-md-2">
+            <label className="form-label small fw-bold">Precio Mín.</label>
+            <input
+              type="number"
+              className="form-control form-control-sm"
+              name="precioMin"
+              value={filtros.precioMin}
+              onChange={onFiltroChange}
+              placeholder="Precio mínimo"
+              min="0"
             />
           </div>
           
+          {/* Filtro por Precio Máximo */}
+          <div className="col-md-2">
+            <label className="form-label small fw-bold">Precio Máx.</label>
+            <input
+              type="number"
+              className="form-control form-control-sm"
+              name="precioMax"
+              value={filtros.precioMax}
+              onChange={onFiltroChange}
+              placeholder="Precio máximo"
+              min="0"
+            />
+          </div>
+        </div>
+
+        {/* Segunda fila de filtros */}
+        <div className="row g-3 mt-2">
+          {/* Filtro por Stock Mínimo */}
+          <div className="col-md-2">
+            <label className="form-label small fw-bold">Stock Mínimo</label>
+            <input
+              type="number"
+              className="form-control form-control-sm"
+              name="stockMin"
+              value={filtros.stockMin}
+              onChange={onFiltroChange}
+              placeholder="Stock mínimo"
+              min="0"
+            />
+          </div>
+          
+          {/* Ordenamiento */}
           <div className="col-md-3">
             <label className="form-label small fw-bold">Ordenar por</label>
             <select
@@ -68,36 +123,20 @@ const OrdenesFiltros = ({ filtros, onFiltroChange, onLimpiarFiltros, resultados 
               value={filtros.ordenarPor}
               onChange={onFiltroChange}
             >
-              <option value="numeroOrden">Número de Orden (A-Z)</option>
-              <option value="numeroOrden-desc">Número de Orden (Z-A)</option>
-              <option value="fecha">Fecha (Más antigua)</option>
-              <option value="fecha-desc">Fecha (Más reciente)</option>
-              <option value="total">Total (Menor a mayor)</option>
-              <option value="total-desc">Total (Mayor a menor)</option>
-              <option value="estado">Estado (A-Z)</option>
-              <option value="estado-desc">Estado (Z-A)</option>
-              <option value="run">RUN Cliente (A-Z)</option>
-              <option value="run-desc">RUN Cliente (Z-A)</option>
+              <option value="nombre">Nombre (A-Z)</option>
+              <option value="nombre-desc">Nombre (Z-A)</option>
+              <option value="precio-asc">Precio (Menor a mayor)</option>
+              <option value="precio-desc">Precio (Mayor a menor)</option>
+              <option value="stock-asc">Stock (Menor a mayor)</option>
+              <option value="stock-desc">Stock (Mayor a menor)</option>
+              <option value="codigo">Código (A-Z)</option>
             </select>
           </div>
-        </div>
-        
-        <div className="row mt-3">
-          <div className="col-md-6">
-            <div className="d-flex align-items-center">
-              <span className="badge bg-primary me-2">
-                {resultados.filtradas} / {resultados.totales}
-              </span>
-              <small className="text-muted">
-                {resultados.filtradas === resultados.totales 
-                  ? 'Mostrando todas las órdenes' 
-                  : `Mostrando ${resultados.filtradas} de ${resultados.totales} órdenes`}
-              </small>
-            </div>
-          </div>
-          <div className="col-md-6 text-end">
+          
+          {/* Botón Limpiar Filtros */}
+          <div className="col-md-1 text-end">
             <button
-              className="btn btn-outline-secondary btn-sm"
+              className="btn btn-outline-secondary btn-sm mt-4"
               onClick={onLimpiarFiltros}
             >
               <i className="bi bi-arrow-clockwise me-1"></i>
@@ -110,4 +149,4 @@ const OrdenesFiltros = ({ filtros, onFiltroChange, onLimpiarFiltros, resultados 
   );
 };
 
-export default OrdenesFiltros;
+export default ProductosFiltros;
