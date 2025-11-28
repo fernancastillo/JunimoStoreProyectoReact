@@ -1,6 +1,12 @@
 import { formatDate } from '../../utils/admin/dashboardUtils';
 
 const PerfilForm = ({ usuario, onEdit }) => {
+  // Función para obtener la fecha de nacimiento correctamente
+  const getFechaNacimiento = () => {
+    // Intentar con diferentes nombres de campo
+    return usuario.fecha_nacimiento || usuario.fechaNac || null;
+  };
+
   return (
     <div className="card shadow mb-4">
       <div className="card-header py-3 d-flex justify-content-between align-items-center">
@@ -95,7 +101,7 @@ const PerfilForm = ({ usuario, onEdit }) => {
                 <div className="list-group-item d-flex justify-content-between align-items-center px-0">
                   <span className="fw-bold text-muted">Fecha Nacimiento:</span>
                   <span className="text-dark">
-                    {usuario.fecha_nacimiento ? formatDate(usuario.fecha_nacimiento) : 'No especificada'}
+                    {getFechaNacimiento() ? formatDate(getFechaNacimiento()) : 'No especificada'}
                   </span>
                 </div>
               </div>

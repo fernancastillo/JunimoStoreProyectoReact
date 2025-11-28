@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authService } from '../tienda/authService';
 import { dataService } from '../dataService';
-import { usuarioService } from './usuarioService';
 
 export const usePerfil = () => {
   const [usuario, setUsuario] = useState(null);
@@ -21,19 +20,35 @@ export const usePerfil = () => {
       const usuarioActual = authService.getCurrentUser();
 
       if (usuarioActual) {
-        const usuarioCompleto = await usuarioService.getUsuarioByRun(usuarioActual.id);
+        const usuarioCompleto = await dataService.getUsuarioById(usuarioActual.id);
 
         if (usuarioCompleto) {
           setUsuario(usuarioCompleto);
+          
+          // SIMPLIFICACIÓN: Usar la fecha directamente sin ajustes
+          const fechaBD = usuarioCompleto.fechaNac || usuarioCompleto.fecha_nacimiento;
+          let fechaParaFormulario = '';
+          
+          if (fechaBD) {
+            const fecha = new Date(fechaBD);
+            if (!isNaN(fecha.getTime())) {
+              // Usar la fecha local directamente
+              const year = fecha.getFullYear();
+              const month = String(fecha.getMonth() + 1).padStart(2, '0');
+              const day = String(fecha.getDate()).padStart(2, '0');
+              fechaParaFormulario = `${year}-${month}-${day}`;
+            }
+          }
+
           setFormData({
             nombre: usuarioCompleto.nombre || '',
             apellidos: usuarioCompleto.apellidos || '',
             correo: usuarioCompleto.correo || '',
-            telefono: usuarioCompleto.telefono || '',
+            telefono: usuarioCompleto.telefono ? usuarioCompleto.telefono.toString() : '',
             direccion: usuarioCompleto.direccion || '',
             comuna: usuarioCompleto.comuna || '',
             region: usuarioCompleto.region || '',
-            fecha_nacimiento: usuarioCompleto.fecha_nacimiento || '',
+            fecha_nacimiento: fechaParaFormulario,
             password: '',
             confirmarPassword: ''
           });
@@ -56,6 +71,16 @@ export const usePerfil = () => {
     }));
   };
 
+  // MISMA FUNCIÓN DE HASH QUE EL VENDEDOR
+  const hashPasswordSHA256 = async (password) => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex.toUpperCase();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -72,14 +97,22 @@ export const usePerfil = () => {
         throw new Error('Usuario no autenticado');
       }
 
+      // Verificar email existente solo si cambió el correo (CON dataService)
       if (formData.correo && formData.correo !== usuario.correo) {
-        const emailExistente = await usuarioService.verificarEmailExistente(formData.correo);
-        if (emailExistente) {
-          throw new Error('Ya existe un usuario con este email');
+        try {
+          const usuarioConEmail = await dataService.getUsuarioByCorreo(formData.correo);
+          if (usuarioConEmail && usuarioConEmail.run !== usuario.run) {
+            throw new Error('Ya existe un usuario con este email');
+          }
+        } catch (error) {
+          console.log('No se pudo verificar email, continuando...');
         }
       }
 
-      // Crear objeto con los datos básicos (sin contraseña por defecto)
+      // SIMPLIFICACIÓN: Usar la fecha directamente sin ajustes complejos
+      let fechaParaBackend = formData.fecha_nacimiento || usuario.fechaNac || '';
+
+      // CREAR OBJETO CON LA ESTRUCTURA CORRECTA PARA EL BACKEND
       const datosActualizados = {
         run: usuario.run,
         nombre: formData.nombre.trim(),
@@ -89,24 +122,25 @@ export const usePerfil = () => {
         direccion: formData.direccion.trim(),
         comuna: formData.comuna || '',
         region: formData.region || '',
-        fecha_nacimiento: formData.fecha_nacimiento || '',
-        tipo: usuario.tipo
-        // NO incluir contrasenha aquí por defecto
+        // SIMPLIFICACIÓN: Enviar la fecha directamente
+        fechaNac: fechaParaBackend,
+        tipo: usuario.tipo,
+        contrasenha: formData.password && formData.password.trim()
+          ? await hashPasswordSHA256(formData.password)
+          : usuario.contrasenha
       };
 
-      // SOLUCIÓN: Solo enviar contraseña si se está cambiando
-      if (formData.password && formData.password.trim()) {
-        datosActualizados.contrasenha = await usuarioService.hashPasswordSHA256(formData.password);
-      }
-      // Si no hay contraseña nueva, NO se envía el campo contrasenha
+      console.log('Fecha enviada al backend:', fechaParaBackend);
+      console.log('Datos a enviar ADMIN:', datosActualizados);
 
-      console.log('Datos a enviar:', datosActualizados);
+      // USAR dataService EN LUGAR DE usuarioService
+      await dataService.updateUsuario(datosActualizados);
 
-      await usuarioService.updateUsuario(usuario.run, datosActualizados);
-
-      const usuarioActualizado = await usuarioService.getUsuarioByRun(usuario.run);
+      // Recargar datos actualizados
+      const usuarioActualizado = await dataService.getUsuarioById(usuario.run);
       setUsuario(usuarioActualizado);
 
+      // Actualizar datos en localStorage
       const userData = {
         id: usuarioActualizado.run,
         nombre: usuarioActualizado.nombre,
@@ -125,31 +159,32 @@ export const usePerfil = () => {
       }));
 
       setShowModal(false);
-      setMensaje({ 
-        tipo: 'success', 
-        texto: formData.password && formData.password.trim() 
-          ? 'Perfil y contraseña actualizados correctamente' 
-          : 'Perfil actualizado correctamente' 
+      setMensaje({
+        tipo: 'success',
+        texto: formData.password && formData.password.trim()
+          ? 'Perfil y contraseña actualizados correctamente'
+          : 'Perfil actualizado correctamente'
       });
 
       setTimeout(() => setMensaje({ tipo: '', texto: '' }), 3000);
 
     } catch (error) {
-      console.error('Error al actualizar perfil:', error);
-      setMensaje({ 
-        tipo: 'error', 
-        texto: error.message || 'Error al actualizar el perfil' 
+      console.error('Error al actualizar perfil ADMIN:', error);
+      setMensaje({
+        tipo: 'error',
+        texto: error.message || 'Error al actualizar el perfil'
       });
     } finally {
       setGuardando(false);
     }
   };
 
+  // AGREGAR LA FUNCIÓN handleDelete QUE FALTABA
   const handleDelete = async () => {
     if (!usuario) return;
 
     try {
-      const usuarios = await usuarioService.getUsuarios();
+      const usuarios = await dataService.getUsuarios();
       const otrosAdmins = usuarios.filter(u =>
         u.tipo === 'Admin' && u.run !== usuario.run
       );
@@ -172,7 +207,7 @@ export const usePerfil = () => {
 
       if (!confirmacion) return;
 
-      await usuarioService.deleteUsuario(usuario.run);
+      await dataService.deleteUsuario(usuario.run);
 
       setMensaje({
         tipo: 'success',
@@ -197,7 +232,7 @@ export const usePerfil = () => {
     showModal,
     handleChange,
     handleSubmit,
-    handleDelete,
+    handleDelete, // AGREGAR handleDelete AL RETURN
     setMensaje,
     cargarPerfil,
     setShowModal
