@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { authService } from '../tienda/authService';
 import { dataService } from '../dataService';
+import {
+  formatDateForInput,
+  convertFormDateToOracle,
+  convertOracleDateToForm,
+  debugDate
+} from './dashboardUtils';
 
 export const usePerfil = () => {
   const [usuario, setUsuario] = useState(null);
@@ -24,21 +30,14 @@ export const usePerfil = () => {
 
         if (usuarioCompleto) {
           setUsuario(usuarioCompleto);
-          
-          // SIMPLIFICACIÓN: Usar la fecha directamente sin ajustes
+
+          // USAR LA NUEVA FUNCIÓN ESPECÍFICA PARA ORACLE
           const fechaBD = usuarioCompleto.fechaNac || usuarioCompleto.fecha_nacimiento;
-          let fechaParaFormulario = '';
-          
-          if (fechaBD) {
-            const fecha = new Date(fechaBD);
-            if (!isNaN(fecha.getTime())) {
-              // Usar la fecha local directamente
-              const year = fecha.getFullYear();
-              const month = String(fecha.getMonth() + 1).padStart(2, '0');
-              const day = String(fecha.getDate()).padStart(2, '0');
-              fechaParaFormulario = `${year}-${month}-${day}`;
-            }
-          }
+          const fechaParaFormulario = convertOracleDateToForm(fechaBD);
+
+          console.log('=== CARGANDO PERFIL ===');
+          debugDate(fechaBD, 'Fecha desde BD');
+          console.log('Fecha para formulario:', fechaParaFormulario);
 
           setFormData({
             nombre: usuarioCompleto.nombre || '',
@@ -71,7 +70,6 @@ export const usePerfil = () => {
     }));
   };
 
-  // MISMA FUNCIÓN DE HASH QUE EL VENDEDOR
   const hashPasswordSHA256 = async (password) => {
     const encoder = new TextEncoder();
     const data = encoder.encode(password);
@@ -84,7 +82,6 @@ export const usePerfil = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validar que las contraseñas coincidan si se está cambiando
     if (formData.password && formData.password !== formData.confirmarPassword) {
       setMensaje({ tipo: 'error', texto: 'Las contraseñas no coinciden' });
       return;
@@ -97,7 +94,6 @@ export const usePerfil = () => {
         throw new Error('Usuario no autenticado');
       }
 
-      // Verificar email existente solo si cambió el correo (CON dataService)
       if (formData.correo && formData.correo !== usuario.correo) {
         try {
           const usuarioConEmail = await dataService.getUsuarioByCorreo(formData.correo);
@@ -109,10 +105,13 @@ export const usePerfil = () => {
         }
       }
 
-      // SIMPLIFICACIÓN: Usar la fecha directamente sin ajustes complejos
-      let fechaParaBackend = formData.fecha_nacimiento || usuario.fechaNac || '';
+      // USAR LA NUEVA FUNCIÓN ESPECÍFICA PARA ORACLE
+      const fechaParaBackend = convertFormDateToOracle(formData.fecha_nacimiento);
 
-      // CREAR OBJETO CON LA ESTRUCTURA CORRECTA PARA EL BACKEND
+      console.log('=== GUARDANDO PERFIL ===');
+      console.log('Fecha desde formulario:', formData.fecha_nacimiento);
+      console.log('Fecha procesada para backend:', fechaParaBackend);
+
       const datosActualizados = {
         run: usuario.run,
         nombre: formData.nombre.trim(),
@@ -122,7 +121,6 @@ export const usePerfil = () => {
         direccion: formData.direccion.trim(),
         comuna: formData.comuna || '',
         region: formData.region || '',
-        // SIMPLIFICACIÓN: Enviar la fecha directamente
         fechaNac: fechaParaBackend,
         tipo: usuario.tipo,
         contrasenha: formData.password && formData.password.trim()
@@ -130,28 +128,12 @@ export const usePerfil = () => {
           : usuario.contrasenha
       };
 
-      console.log('Fecha enviada al backend:', fechaParaBackend);
-      console.log('Datos a enviar ADMIN:', datosActualizados);
+      console.log('Datos completos a enviar:', datosActualizados);
 
-      // USAR dataService EN LUGAR DE usuarioService
       await dataService.updateUsuario(datosActualizados);
 
-      // Recargar datos actualizados
-      const usuarioActualizado = await dataService.getUsuarioById(usuario.run);
-      setUsuario(usuarioActualizado);
+      await cargarPerfil();
 
-      // Actualizar datos en localStorage
-      const userData = {
-        id: usuarioActualizado.run,
-        nombre: usuarioActualizado.nombre,
-        email: usuarioActualizado.correo,
-        type: usuarioActualizado.tipo,
-        loginTime: new Date().toISOString()
-      };
-
-      localStorage.setItem('auth_user', JSON.stringify(userData));
-
-      // Limpiar campos de contraseña
       setFormData(prev => ({
         ...prev,
         password: '',
@@ -179,47 +161,102 @@ export const usePerfil = () => {
     }
   };
 
-  // AGREGAR LA FUNCIÓN handleDelete QUE FALTABA
   const handleDelete = async () => {
     if (!usuario) return;
 
     try {
-      const usuarios = await dataService.getUsuarios();
-      const otrosAdmins = usuarios.filter(u =>
-        u.tipo === 'Admin' && u.run !== usuario.run
-      );
+      console.log('Iniciando proceso de eliminación para usuario:', {
+        run: usuario.run,
+        nombre: usuario.nombre,
+        tipo: usuario.tipo
+      });
 
-      if (otrosAdmins.length === 0) {
-        setMensaje({
-          tipo: 'error',
-          texto: 'No se puede eliminar el perfil. Debe haber al menos otro usuario administrador en el sistema.'
-        });
-        return;
+      // Obtener todos los usuarios para verificar si hay otros administradores
+      const usuarios = await dataService.getUsuarios();
+      console.log('Todos los usuarios obtenidos:', usuarios);
+
+      // Verificar si el usuario actual es administrador
+      const esAdministrador = usuario.tipo &&
+        (usuario.tipo.toLowerCase() === 'administrador' ||
+          usuario.tipo.toLowerCase() === 'admin');
+
+      console.log('Es administrador?:', esAdministrador);
+
+      if (esAdministrador) {
+        // Contar administradores excluyendo al usuario actual
+        const otrosAdmins = usuarios.filter(u =>
+          u && u.tipo &&
+          (u.tipo.toLowerCase() === 'administrador' || u.tipo.toLowerCase() === 'admin') &&
+          u.run !== usuario.run
+        );
+
+        console.log('Otros administradores encontrados:', otrosAdmins);
+
+        // Si no hay otros administradores, bloquear eliminación
+        if (otrosAdmins.length === 0) {
+          const mensajeError = 'No se puede eliminar el perfil. Debe haber al menos otro usuario administrador en el sistema para mantener la funcionalidad del mismo.';
+          console.log(mensajeError);
+          throw new Error(mensajeError);
+        }
       }
 
       const confirmacion = window.confirm(
-        `¿Estás seguro de que quieres eliminar tu perfil?\n\n` +
+        `¿ESTÁS SEGURO DE QUE QUIERES ELIMINAR TU PERFIL?\n\n` +
+        `Esta acción es IRREVERSIBLE y eliminará:\n` +
+        `• Tu cuenta completa\n` +
+        `• Todas tus órdenes asociadas\n` +
+        `• Tu historial en el sistema\n\n` +
+        `Información que se eliminará:\n` +
         `• Nombre: ${usuario.nombre} ${usuario.apellidos}\n` +
         `• RUN: ${usuario.run}\n` +
-        `• Email: ${usuario.correo}\n\n` +
-        `Esta acción no se puede deshacer.`
+        `• Email: ${usuario.correo}\n` +
+        `• Tipo: ${usuario.tipo}\n\n` +
+        `¿Continuar con la eliminación?`
       );
 
-      if (!confirmacion) return;
+      if (!confirmacion) {
+        console.log('Eliminación cancelada por el usuario');
+        return;
+      }
 
+      // Mostrar mensaje de carga
+      setMensaje({
+        tipo: 'info',
+        texto: 'Eliminando perfil y todas las órdenes asociadas...'
+      });
+
+      console.log('Ejecutando eliminación del usuario:', usuario.run);
       await dataService.deleteUsuario(usuario.run);
 
       setMensaje({
         tipo: 'success',
-        texto: 'Perfil eliminado correctamente. Serás redirigido al login.'
+        texto: 'Perfil eliminado correctamente. Serás redirigido al login en 3 segundos.'
       });
+
+      console.log('Perfil eliminado exitosamente, redirigiendo al login...');
 
       setTimeout(() => {
         authService.logout();
-      }, 2000);
+      }, 3000);
 
     } catch (error) {
-      setMensaje({ tipo: 'error', texto: error.message || 'Error al eliminar el perfil' });
+      console.error('Error completo al eliminar perfil:', error);
+
+      // Mostrar mensaje de error específico
+      let mensajeError = error.message || 'Error al eliminar el perfil';
+
+      // Si es un error de validación de administrador, mostrarlo claramente
+      if (mensajeError.includes('otro usuario administrador')) {
+        setMensaje({
+          tipo: 'error',
+          texto: mensajeError
+        });
+      } else {
+        setMensaje({
+          tipo: 'error',
+          texto: `Error al eliminar el perfil: ${mensajeError}`
+        });
+      }
     }
   };
 
@@ -232,7 +269,7 @@ export const usePerfil = () => {
     showModal,
     handleChange,
     handleSubmit,
-    handleDelete, // AGREGAR handleDelete AL RETURN
+    handleDelete,
     setMensaje,
     cargarPerfil,
     setShowModal

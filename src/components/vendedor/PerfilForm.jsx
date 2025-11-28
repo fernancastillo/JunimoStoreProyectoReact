@@ -1,6 +1,12 @@
 import { formatDate } from '../../utils/vendedor/dashboardUtils';
 
 const PerfilForm = ({ usuario, onEdit }) => {
+    // CORRECCIÓN: Función para obtener la fecha de nacimiento correctamente
+    const getFechaNacimiento = () => {
+        // Intentar con diferentes nombres de campo que pueden venir de la BD
+        return usuario.fechaNac || usuario.fecha_nacimiento || null;
+    };
+
     return (
         <div className="card shadow-sm border-0">
             <div className="card-header border-0 bg-transparent d-flex justify-content-between align-items-center">
@@ -95,7 +101,8 @@ const PerfilForm = ({ usuario, onEdit }) => {
                                 <div className="list-group-item d-flex justify-content-between align-items-center px-0">
                                     <span className="fw-bold text-muted">Fecha Nacimiento:</span>
                                     <span className="text-dark">
-                                        {usuario.fecha_nacimiento ? formatDate(usuario.fecha_nacimiento) : 'No especificada'}
+                                        {/* CORRECCIÓN: Usar la función helper */}
+                                        {getFechaNacimiento() ? formatDate(getFechaNacimiento()) : 'No especificada'}
                                     </span>
                                 </div>
                             </div>

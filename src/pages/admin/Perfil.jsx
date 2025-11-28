@@ -15,6 +15,7 @@ const Perfil = () => {
         showModal,
         handleChange,
         handleSubmit,
+        handleDelete,
         setMensaje,
         cargarPerfil,
         setShowModal
@@ -52,6 +53,17 @@ const Perfil = () => {
             'cliente': 'Cliente'
         };
         return tipos[tipo?.toLowerCase()] || tipo || 'Usuario';
+    };
+
+    // Función para manejar la eliminación del perfil
+    const handleEliminarPerfil = async () => {
+        if (!usuario) return;
+
+        try {
+            await handleDelete();
+        } catch (error) {
+            console.error('Error al eliminar perfil:', error);
+        }
     };
 
     if (loading) {
@@ -93,7 +105,6 @@ const Perfil = () => {
                 </div>
             </div>
 
-            {/* Resto de tu código... */}
             {/* Mensajes */}
             {mensaje.texto && (
                 <div className={`alert alert-${mensaje.tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show mb-4`}>
@@ -112,6 +123,7 @@ const Perfil = () => {
                     <PerfilForm
                         usuario={usuario}
                         onEdit={() => setShowModal(true)}
+                        onDelete={handleEliminarPerfil}
                     />
                 </div>
 
@@ -149,7 +161,23 @@ const Perfil = () => {
                         </div>
                     </div>
 
-                    {/* Resto de tu código del sidebar... */}
+                    {/* Tarjeta de advertencia para administradores */}
+                    {usuario.tipo && usuario.tipo.toLowerCase() === 'administrador' && (
+                        <div className="card shadow-sm border-warning">
+                            <div className="card-header bg-warning text-dark border-warning">
+                                <h6 className="m-0 fw-bold">
+                                    <i className="bi bi-exclamation-triangle me-2"></i>
+                                    Advertencia Importante
+                                </h6>
+                            </div>
+                            <div className="card-body">
+                                <p className="small text-muted mb-0">
+                                    <strong>Como administrador</strong>, tu cuenta es esencial para el sistema. 
+                                    Solo podrás eliminar tu perfil si existe al menos otro usuario administrador.
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

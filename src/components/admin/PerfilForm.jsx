@@ -1,6 +1,6 @@
 import { formatDate } from '../../utils/admin/dashboardUtils';
 
-const PerfilForm = ({ usuario, onEdit }) => {
+const PerfilForm = ({ usuario, onEdit, onDelete }) => {
   // Función para obtener la fecha de nacimiento correctamente
   const getFechaNacimiento = () => {
     // Intentar con diferentes nombres de campo
@@ -14,13 +14,22 @@ const PerfilForm = ({ usuario, onEdit }) => {
           <i className="bi bi-person-vcard me-2"></i>
           Información Personal
         </h6>
-        <button
-          className="btn btn-primary btn-sm"
-          onClick={onEdit}
-        >
-          <i className="bi bi-pencil me-2"></i>
-          Editar Perfil
-        </button>
+        <div>
+          <button
+            className="btn btn-primary btn-sm me-2"
+            onClick={onEdit}
+          >
+            <i className="bi bi-pencil me-2"></i>
+            Editar Perfil
+          </button>
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={onDelete}
+          >
+            <i className="bi bi-trash me-2"></i>
+            Eliminar Perfil
+          </button>
+        </div>
       </div>
       <div className="card-body">
         <div className="row">

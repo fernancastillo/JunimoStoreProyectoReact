@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { authService } from '../tienda/authService';
 import { dataService } from '../dataService';
+import { convertOracleDateToForm } from './dashboardUtils'; // Importar la función de formato
 
 export const usePerfil = () => {
     const [usuario, setUsuario] = useState(null);
@@ -24,16 +25,23 @@ export const usePerfil = () => {
 
                 if (usuarioCompleto) {
                     setUsuario(usuarioCompleto);
+                    
+                    // CORRECCIÓN: Usar la función de formato para la fecha
+                    const fechaBD = usuarioCompleto.fechaNac || usuarioCompleto.fecha_nacimiento;
+                    const fechaParaFormulario = convertOracleDateToForm(fechaBD);
+                    
+                    console.log('VENDEDOR - Fecha desde BD:', fechaBD);
+                    console.log('VENDEDOR - Fecha para formulario:', fechaParaFormulario);
+
                     setFormData({
                         nombre: usuarioCompleto.nombre || '',
                         apellidos: usuarioCompleto.apellidos || '',
                         correo: usuarioCompleto.correo || '',
-                        // Asegurar que teléfono sea string
                         telefono: usuarioCompleto.telefono ? usuarioCompleto.telefono.toString() : '',
                         direccion: usuarioCompleto.direccion || '',
                         comuna: usuarioCompleto.comuna || '',
                         region: usuarioCompleto.region || '',
-                        fecha_nacimiento: usuarioCompleto.fechaNac || usuarioCompleto.fecha_nacimiento || '',
+                        fecha_nacimiento: fechaParaFormulario, // CORREGIDO: usar fecha formateada
                         password: '',
                         confirmarPassword: ''
                     });
@@ -84,10 +92,12 @@ export const usePerfil = () => {
                         throw new Error('Ya existe un usuario con este email');
                     }
                 } catch (error) {
-                    // Si hay error al buscar por email, continuar (puede ser que no exista el endpoint)
                     console.log('No se pudo verificar email, continuando...');
                 }
             }
+
+            // CORRECCIÓN: Usar la función de formato para enviar al backend
+            const fechaParaBackend = formData.fecha_nacimiento; // Enviar directamente
 
             const datosActualizados = {
                 run: usuario.run,
@@ -98,26 +108,26 @@ export const usePerfil = () => {
                 direccion: formData.direccion.trim(),
                 comuna: formData.comuna || '',
                 region: formData.region || '',
-                fechaNac: formData.fecha_nacimiento || '',
-                tipo: usuario.tipo, // No se puede cambiar el tipo
+                fechaNac: fechaParaBackend, // CORREGIDO: usar fecha procesada
+                tipo: usuario.tipo,
                 contrasenha: formData.password && formData.password.trim()
                     ? await hashPasswordSHA256(formData.password)
                     : usuario.contrasenha
             };
 
-            // Usar dataService para actualizar
+            console.log('VENDEDOR - Datos a enviar:', datosActualizados);
+
             await dataService.updateUsuario(datosActualizados);
 
             // Recargar datos actualizados
-            const usuarioActualizado = await dataService.getUsuarioById(usuario.run);
-            setUsuario(usuarioActualizado);
+            await cargarPerfil();
 
             // Actualizar datos en localStorage
             const userData = {
-                id: usuarioActualizado.run,
-                nombre: usuarioActualizado.nombre,
-                email: usuarioActualizado.correo,
-                type: usuarioActualizado.tipo,
+                id: usuario.run,
+                nombre: formData.nombre,
+                email: formData.correo,
+                type: usuario.tipo,
                 loginTime: new Date().toISOString()
             };
 
@@ -136,6 +146,7 @@ export const usePerfil = () => {
             setTimeout(() => setMensaje({ tipo: '', texto: '' }), 3000);
 
         } catch (error) {
+            console.error('VENDEDOR - Error al actualizar:', error);
             setMensaje({ tipo: 'error', texto: error.message || 'Error al actualizar el perfil' });
         } finally {
             setGuardando(false);

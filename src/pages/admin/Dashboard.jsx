@@ -70,7 +70,7 @@ const Dashboard = () => {
       {/* Header del Dashboard */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="h3 mb-0 text-white fw-bold" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}>
-          Dashboard - Oracle Cloud
+          Dashboard
         </h1>
         <div className="text-white fw-medium" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.7)' }}>
           Bienvenido, <strong>{authService.getCurrentUser()?.nombre || 'Administrador'}</strong>
