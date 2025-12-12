@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useProductos } from '../../utils/admin/useProductos';
-import ProductosTable from '../../components/admin/ProductosTable';
-import ProductoModal from '../../components/admin/ProductoModal';
-import ProductosFiltros from '../../components/admin/ProductosFiltros';
+import { useCategorias } from '../../utils/admin/useCategorias';
+import CategoriasTable from '../../components/admin/CategoriasTable';
+import CategoriaModal from '../../components/admin/CategoriaModal';
+import CategoriasFiltros from '../../components/admin/CategoriasFiltros';
 import ReporteModal from '../../components/admin/ReporteModal';
 import {
-  generarReporteCSV,
-  generarReporteCSVExcel,
-  generarReporteJSON,
-  descargarArchivo,
-  generarEstadisticas,
+  generarReporteCategorias,
+  manejarReporteCategorias,
   formatearFecha
 } from '../../utils/admin/reportUtils';
 
@@ -33,36 +30,33 @@ const SuccessAlert = ({ message, show, onClose }) => {
   );
 };
 
-const Productos = () => {
+const Categorias = () => {
   const {
-    productos,
-    productosFiltrados,
     categorias,
-    categoriaExiste,
+    categoriasFiltradas,
     loading,
     error,
-    editingProducto,
+    editingCategoria,
     showModal,
     filtros,
     successMessage,
     showSuccessMessage,
     clearSuccessMessage,
-    handleCreate,
-    handleUpdate,
     handleDelete,
     handleEdit,
     handleCreateNew,
     handleCloseModal,
-    getCodigoAutomatico,
-    actualizarCategorias,
+    handleSave,
     handleFiltroChange,
-    handleLimpiarFiltros
-  } = useProductos();
+    handleLimpiarFiltros,
+    nombreCategoriaExiste
+  } = useCategorias();
 
   const [showReporteModal, setShowReporteModal] = useState(false);
   const [actionError, setActionError] = useState('');
 
   useEffect(() => {
+    // Fondo idéntico a la página de Productos
     document.body.style.backgroundImage = 'url("../src/assets/tienda/fondostardew.png")';
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundPosition = 'center';
@@ -84,96 +78,36 @@ const Productos = () => {
     };
   }, []);
 
-  const handleSave = async (productoData) => {
+  const handleSaveWithError = async (categoriaData) => {
     try {
       setActionError('');
-      let result;
-
-      if (editingProducto) {
-        result = await handleUpdate(editingProducto.codigo, productoData);
-      } else {
-        result = await handleCreate(productoData);
-      }
+      const result = await handleSave(categoriaData);
 
       if (!result.success) {
         setActionError(result.error);
-      } else {
-        setTimeout(() => {
-          actualizarCategorias();
-        }, 100);
       }
     } catch (error) {
       setActionError(`Error: ${error.message}`);
     }
   };
 
-  const handleGenerarReporte = (formato = 'csv') => {
-    try {
-      const fecha = formatearFecha();
-      let contenido, nombreArchivo, tipoMIME;
+  const handleDeleteWithConfirm = async (id) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta categoría?\n\nNota: No se pueden eliminar categorías que tengan productos asociados.')) {
+      try {
+        setActionError('');
+        const result = await handleDelete(id);
 
-      if (formato === 'csv') {
-        contenido = generarReporteCSV(productosFiltrados);
-        nombreArchivo = `reporte_productos_${fecha}.csv`;
-        tipoMIME = 'text/csv;charset=utf-8;';
-      } else if (formato === 'csv-excel') {
-        contenido = generarReporteCSVExcel(productosFiltrados);
-        nombreArchivo = `reporte_productos_${fecha}.csv`;
-        tipoMIME = 'text/csv;charset=utf-8;';
-      } else {
-        contenido = generarReporteJSON(productosFiltrados);
-        nombreArchivo = `reporte_productos_${fecha}.json`;
-        tipoMIME = 'application/json;charset=utf-8;';
+        if (!result.success) {
+          setActionError(result.error);
+        }
+      } catch (error) {
+        setActionError(`Error: ${error.message}`);
       }
-
-      descargarArchivo(contenido, nombreArchivo, tipoMIME);
-
-      const estadisticas = generarEstadisticas(productosFiltrados);
-
-    } catch (error) {
-      setActionError('Error al generar el reporte. Por favor, intenta nuevamente.');
     }
-  };
-
-  const handleSeleccionCSV = (formato) => {
-    handleGenerarReporte(formato);
-    setShowReporteModal(false);
-  };
-
-  const handleAbrirModalCSV = () => {
-    setShowReporteModal(true);
   };
 
   const handleCerrarModalReporte = () => {
     setShowReporteModal(false);
-  };
-
-  const handleReporteJSON = () => {
-    const estadisticas = generarEstadisticas(productosFiltrados);
-
-    const confirmar = window.confirm(`
-ESTADÍSTICAS DEL REPORTE:
-
-• Total de productos: ${estadisticas.totalProductos}
-• Sin stock: ${estadisticas.sinStock}
-• Stock crítico: ${estadisticas.stockCritico}
-• Stock normal: ${estadisticas.stockNormal}
-• Categorías: ${estadisticas.categorias}
-
-¿Deseas descargar el reporte en formato JSON?
-    `.trim());
-
-    if (confirmar) {
-      handleGenerarReporte('json');
-    }
-  };
-
-  const handleReporteSolicitado = (formato) => {
-    if (formato === 'csv') {
-      handleAbrirModalCSV();
-    } else {
-      handleReporteJSON();
-    }
   };
 
   if (loading) {
@@ -181,9 +115,9 @@ ESTADÍSTICAS DEL REPORTE:
       <div className="container-fluid" style={{ padding: '20px', minHeight: '100vh' }}>
         <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
           <div className="spinner-border text-white" role="status">
-            <span className="visually-hidden">Cargando productos...</span>
+            <span className="visually-hidden">Cargando categorías...</span>
           </div>
-          <span className="ms-2 text-white">Cargando productos desde Oracle...</span>
+          <span className="ms-2 text-white">Cargando categorías desde Oracle...</span>
         </div>
       </div>
     );
@@ -193,7 +127,7 @@ ESTADÍSTICAS DEL REPORTE:
     return (
       <div className="container-fluid" style={{ padding: '20px', minHeight: '100vh' }}>
         <div className="alert alert-danger">
-          <h4>Error al cargar productos</h4>
+          <h4>Error al cargar categorías</h4>
           <p>{error}</p>
           <button
             className="btn btn-primary"
@@ -205,8 +139,6 @@ ESTADÍSTICAS DEL REPORTE:
       </div>
     );
   }
-
-  const estadisticas = generarEstadisticas(productosFiltrados);
 
   return (
     <div className="container-fluid" style={{ padding: '20px', minHeight: '100vh' }}>
@@ -230,7 +162,8 @@ ESTADÍSTICAS DEL REPORTE:
 
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="h3 mb-0 text-white fw-bold" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.7)' }}>
-          Gestión de Productos
+          <i className="bi bi-tags me-2"></i>
+          Gestión de Categorías
         </h1>
         <div className="d-flex flex-wrap gap-2">
           <button
@@ -238,18 +171,18 @@ ESTADÍSTICAS DEL REPORTE:
             onClick={handleCreateNew}
           >
             <i className="bi bi-plus-circle me-2"></i>
-            Agregar Producto
+            Agregar Categoría
           </button>
           <button
             className="btn btn-primary shadow"
-            onClick={() => handleReporteSolicitado('csv')}
+            onClick={() => manejarReporteCategorias(categoriasFiltradas, 'csv')}
           >
             <i className="bi bi-file-earmark-spreadsheet me-2"></i>
             Reporte CSV
           </button>
           <button
             className="btn btn-warning shadow"
-            onClick={() => handleReporteSolicitado('json')}
+            onClick={() => manejarReporteCategorias(categoriasFiltradas, 'json')}
           >
             <i className="bi bi-file-code me-2"></i>
             Reporte JSON
@@ -264,54 +197,14 @@ ESTADÍSTICAS DEL REPORTE:
               <div className="row no-gutters align-items-center">
                 <div className="col mr-2">
                   <div className="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                    Productos Filtrados
+                    Categorías Filtradas
                   </div>
                   <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {productosFiltrados.length}
+                    {categoriasFiltradas.length}
                   </div>
                 </div>
                 <div className="col-auto">
-                  <i className="bi bi-box-seam fa-2x text-gray-300"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-3 col-md-6 mb-4">
-          <div className="card border-left-warning shadow h-100 py-2" style={{ opacity: 0.95 }}>
-            <div className="card-body">
-              <div className="row no-gutters align-items-center">
-                <div className="col mr-2">
-                  <div className="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                    Stock Crítico
-                  </div>
-                  <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {productosFiltrados.filter(p => p.stock > 0 && p.stock <= p.stock_critico).length}
-                  </div>
-                </div>
-                <div className="col-auto">
-                  <i className="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-xl-3 col-md-6 mb-4">
-          <div className="card border-left-danger shadow h-100 py-2" style={{ opacity: 0.95 }}>
-            <div className="card-body">
-              <div className="row no-gutters align-items-center">
-                <div className="col mr-2">
-                  <div className="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                    Sin Stock
-                  </div>
-                  <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {productosFiltrados.filter(p => p.stock === 0).length}
-                  </div>
-                </div>
-                <div className="col-auto">
-                  <i className="bi bi-x-circle fa-2x text-gray-300"></i>
+                  <i className="bi bi-filter-circle fa-2x text-gray-300"></i>
                 </div>
               </div>
             </div>
@@ -324,10 +217,10 @@ ESTADÍSTICAS DEL REPORTE:
               <div className="row no-gutters align-items-center">
                 <div className="col mr-2">
                   <div className="text-xs font-weight-bold text-success text-uppercase mb-1">
-                    Categorías Filtradas
+                    Total Categorías
                   </div>
                   <div className="h5 mb-0 font-weight-bold text-gray-800">
-                    {new Set(productosFiltrados.map(p => p.categoria)).size}
+                    {categorias.length}
                   </div>
                 </div>
                 <div className="col-auto">
@@ -339,43 +232,31 @@ ESTADÍSTICAS DEL REPORTE:
         </div>
       </div>
 
-      <ProductosFiltros
+      <CategoriasFiltros
         filtros={filtros}
-        categorias={categorias}
         onFiltroChange={handleFiltroChange}
         onLimpiarFiltros={handleLimpiarFiltros}
         resultados={{
-          filtrados: productosFiltrados.length,
-          totales: productos.length
+          filtrados: categoriasFiltradas.length,
+          totales: categorias.length
         }}
       />
 
-      <ProductosTable
-        productos={productosFiltrados}
+      <CategoriasTable
+        categorias={categoriasFiltradas}
         onEdit={handleEdit}
-        onDelete={handleDelete}
-        onGenerarReporte={handleReporteSolicitado}
+        onDelete={handleDeleteWithConfirm}
       />
 
-      <ProductoModal
+      <CategoriaModal
         show={showModal}
-        producto={editingProducto}
-        categorias={categorias}
-        categoriaExiste={categoriaExiste}
-        getCodigoAutomatico={getCodigoAutomatico}
-        onSave={handleSave}
+        categoria={editingCategoria}
+        nombreCategoriaExiste={nombreCategoriaExiste}
+        onSave={handleSaveWithError}
         onClose={handleCloseModal}
-      />
-
-      <ReporteModal
-        show={showReporteModal}
-        estadisticas={estadisticas}
-        tipo="productos"
-        onSeleccionarFormato={handleSeleccionCSV}
-        onClose={handleCerrarModalReporte}
       />
     </div>
   );
 };
 
-export default Productos;
+export default Categorias;

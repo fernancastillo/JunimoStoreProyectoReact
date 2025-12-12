@@ -1,7 +1,6 @@
 import ProductoForm from './ProductoForm';
-import { generarBoletaOrden } from '../../utils/admin/boletaUtils';
 
-const ProductoModal = ({ show, producto, categorias, getCodigoAutomatico, onSave, onClose }) => {
+const ProductoModal = ({ show, producto, categorias, categoriaExiste, getCodigoAutomatico, onSave, onClose }) => {
   if (!show) return null;
 
   const handleSubmit = (productoData) => {
@@ -22,6 +21,7 @@ const ProductoModal = ({ show, producto, categorias, getCodigoAutomatico, onSave
             <ProductoForm
               producto={producto}
               categorias={categorias}
+              categoriaExiste={categoriaExiste}
               getCodigoAutomatico={getCodigoAutomatico}
               onSubmit={handleSubmit}
               onCancel={onClose}

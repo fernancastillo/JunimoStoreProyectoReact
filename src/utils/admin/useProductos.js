@@ -237,64 +237,54 @@ export const useProductos = () => {
     }
   };
 
-  const obtenerCategoriaPorNombre = async (nombreCategoria) => {
-    try {
-      const categoriaExistente = categoriasCompletas.find(cat => cat.nombre === nombreCategoria);
-
-      if (categoriaExistente) {
-        return categoriaExistente;
-      }
-
-      const nuevaCategoria = await dataService.addCategoria({
-        nombre: nombreCategoria
-      });
-
-      if (nuevaCategoria) {
-        setCategoriasCompletas(prev => [...prev, nuevaCategoria]);
-        setCategorias(prev => [...prev, nombreCategoria]);
-        return nuevaCategoria;
-      }
-
-      return { nombre: nombreCategoria };
-    } catch (error) {
-      return { nombre: nombreCategoria };
-    }
+  // FUNCIÓN: Verificar si categoría ya existe (case insensitive)
+  const categoriaExiste = (nombreCategoria) => {
+    if (!nombreCategoria || !categorias.length) return false;
+    
+    const nombreNormalizado = nombreCategoria.trim().toLowerCase();
+    
+    return categorias.some(categoria => 
+      categoria.trim().toLowerCase() === nombreNormalizado
+    );
   };
 
   const prepararProductoParaBackend = async (productoData, esEdicion = false, codigoOriginal = null) => {
-    const categoriaObj = await obtenerCategoriaPorNombre(productoData.categoria);
+    let categoriaObj = null;
+    
+    
+    // Buscar en categorías existentes
+    const categoriaExistente = categoriasCompletas.find(cat => {
+        const nombreCategoria = cat.nombre || cat;
+        return nombreCategoria.toLowerCase() === productoData.categoria.toLowerCase();
+    });
+    
+    
+    if (categoriaExistente) {
+        // IMPORTANTE: Solo enviar el ID si la categoría existe en BD
+        if (categoriaExistente.id) {
+            categoriaObj = { id: categoriaExistente.id };
+        } else {
+            // Si no tiene ID (solo nombre), solo enviar el nombre
+            categoriaObj = { nombre: productoData.categoria };
+        }
+    } else {
+        // ERROR: La categoría no existe
+        throw new Error(`La categoría "${productoData.categoria}" no existe. Por favor, créala primero en la sección de Categorías.`);
+    }
+    
 
     const productoParaBackend = {
-      codigo: esEdicion ? codigoOriginal : productoData.codigo,
-      nombre: productoData.nombre,
-      descripcion: productoData.descripcion,
-      categoria: categoriaObj,
-      precio: parseFloat(productoData.precio),
-      stockActual: parseInt(productoData.stock),
-      stockCritico: parseInt(productoData.stock_critico),
-      imagen: productoData.imagen || ''
+        codigo: esEdicion ? codigoOriginal : productoData.codigo,
+        nombre: productoData.nombre,
+        descripcion: productoData.descripcion,
+        categoria: categoriaObj,
+        precio: parseFloat(productoData.precio),
+        stockActual: parseInt(productoData.stock),
+        stockCritico: parseInt(productoData.stock_critico),
+        imagen: productoData.imagen || ''
     };
 
     return productoParaBackend;
-  };
-
-  const guardarCategoriaEnBD = async (nuevaCategoria) => {
-    try {
-      const categoriaCreada = await dataService.addCategoria({
-        nombre: nuevaCategoria
-      });
-
-      if (categoriaCreada) {
-        setCategorias(prev => [...new Set([...prev, nuevaCategoria])]);
-        setCategoriasCompletas(prev => [...prev, categoriaCreada]);
-        return true;
-      }
-
-      return guardarCategoria(nuevaCategoria);
-
-    } catch (error) {
-      return guardarCategoria(nuevaCategoria);
-    }
   };
 
   const aplicarFiltros = () => {
@@ -415,13 +405,18 @@ export const useProductos = () => {
     setSuccessMessage('');
   };
 
+  // SIMPLIFICADA: Solo categorías existentes
   const handleCreate = async (productoData) => {
     try {
-      if (productoData.esNuevaCategoria && productoData.nuevaCategoria) {
-        await guardarCategoriaEnBD(productoData.nuevaCategoria);
-        productoData.categoria = productoData.nuevaCategoria;
+      // Validar que la categoría exista
+      if (!categoriaExiste(productoData.categoria)) {
+        return { 
+          success: false, 
+          error: `La categoría "${productoData.categoria}" no existe. Por favor, créala primero en la sección de Categorías.` 
+        };
       }
 
+      // Generar código del producto
       productoData.codigo = generarCodigo(productoData.categoria, productos);
 
       if (codigoExiste(productoData.codigo, productos)) {
@@ -429,9 +424,11 @@ export const useProductos = () => {
         productoData.codigo = `${productoData.codigo.substring(0, 2)}${timestamp}`;
       }
 
+      // Preparar y enviar el producto
       const productoParaBackend = await prepararProductoParaBackend(productoData, false);
       await dataService.addProducto(productoParaBackend);
 
+      // Recargar productos
       await loadProductos();
       setShowModal(false);
 
@@ -441,15 +438,20 @@ export const useProductos = () => {
 
       return { success: true };
     } catch (error) {
+      console.error("Error en handleCreate:", error);
       return { success: false, error: error.message };
     }
   };
 
+  // SIMPLIFICADA: Solo categorías existentes
   const handleUpdate = async (codigo, productoData) => {
     try {
-      if (productoData.esNuevaCategoria && productoData.nuevaCategoria) {
-        await guardarCategoriaEnBD(productoData.nuevaCategoria);
-        productoData.categoria = productoData.nuevaCategoria;
+      // Validar que la categoría exista
+      if (!categoriaExiste(productoData.categoria)) {
+        return { 
+          success: false, 
+          error: `La categoría "${productoData.categoria}" no existe. Por favor, créala primero en la sección de Categorías.` 
+        };
       }
 
       const productoParaBackend = await prepararProductoParaBackend(productoData, true, codigo);
@@ -475,7 +477,6 @@ export const useProductos = () => {
         await dataService.deleteProducto(codigo);
         await loadProductos();
         
-        // Agregar mensaje de éxito
         setSuccessMessage('Producto eliminado con éxito');
         setShowSuccessMessage(true);
         setTimeout(() => setShowSuccessMessage(false), 3000);
@@ -513,6 +514,7 @@ export const useProductos = () => {
     productos,
     productosFiltrados,
     categorias,
+    categoriasCompletas,
     loading,
     error,
     editingProducto,
@@ -531,6 +533,7 @@ export const useProductos = () => {
     actualizarCategorias,
     refreshData: loadProductos,
     handleFiltroChange,
-    handleLimpiarFiltros
+    handleLimpiarFiltros,
+    categoriaExiste
   };
 };

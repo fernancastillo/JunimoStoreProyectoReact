@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 
-const ProductoForm = ({ producto, categorias, getCodigoAutomatico, onSubmit, onCancel }) => {
+const ProductoForm = ({ producto, categorias, categoriaExiste, getCodigoAutomatico, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
-    categoria: 'Accesorios',
-    esNuevaCategoria: false,
-    nuevaCategoria: '',
+    categoria: categorias.length > 0 ? categorias[0] : '', // Usar primera categoría por defecto
     precio: '',
     stock: '',
     stock_critico: '',
@@ -14,48 +12,58 @@ const ProductoForm = ({ producto, categorias, getCodigoAutomatico, onSubmit, onC
   });
 
   const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const [imagenPrevia, setImagenPrevia] = useState('');
-  const [codigoGenerado, setCodigoGenerado] = useState(''); // Estado para mostrar el código generado
+  const [codigoGenerado, setCodigoGenerado] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Imagen por defecto
   const imagenPorDefecto = '/src/assets/admin/productodefault.png';
 
   useEffect(() => {
     if (producto) {
-      // Modo edición - mostrar código existente
+      // Modo edición
       setFormData({
         nombre: producto.nombre,
         descripcion: producto.descripcion,
-        categoria: producto.categoria,
-        esNuevaCategoria: false,
-        nuevaCategoria: '',
+        categoria: producto.categoria || (categorias.length > 0 ? categorias[0] : ''),
         precio: producto.precio.toString(),
         stock: producto.stock.toString(),
         stock_critico: producto.stock_critico.toString(),
         imagen: producto.imagen || ''
       });
-      setCodigoGenerado(producto.codigo); // Mostrar código existente
+      setCodigoGenerado(producto.codigo);
       setImagenPrevia(producto.imagen || imagenPorDefecto);
     } else {
-      // Modo creación - generar código automático inicial
-      const codigoAuto = getCodigoAutomatico('Accesorios');
-      setCodigoGenerado(codigoAuto); // Guardar código generado
+      // Modo creación
+      const categoriaDefault = categorias.length > 0 ? categorias[0] : '';
+      const codigoAuto = getCodigoAutomatico(categoriaDefault);
+      setFormData(prev => ({
+        ...prev,
+        categoria: categoriaDefault
+      }));
+      setCodigoGenerado(codigoAuto);
       setImagenPrevia(imagenPorDefecto);
     }
-  }, [producto, getCodigoAutomatico]);
+    
+    // Limpiar estados
+    setErrors({});
+    setTouched({});
+    setIsSubmitting(false);
+  }, [producto, getCodigoAutomatico, categorias]);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
 
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     }));
 
     // Si cambia la categoría y no estamos editando, generar nuevo código
     if (name === 'categoria' && !producto) {
       const nuevoCodigo = getCodigoAutomatico(value);
-      setCodigoGenerado(nuevoCodigo); // Actualizar código generado
+      setCodigoGenerado(nuevoCodigo);
     }
 
     // Si cambia la imagen, actualizar previsualización
@@ -63,65 +71,111 @@ const ProductoForm = ({ producto, categorias, getCodigoAutomatico, onSubmit, onC
       setImagenPrevia(value || imagenPorDefecto);
     }
 
-    // Limpiar error del campo
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
-  };
-
-  const handleCategoriaChange = (e) => {
-    const { value } = e.target;
-
-    if (value === '_nueva') {
-      // Seleccionó "Nueva categoría"
-      setFormData(prev => ({
-        ...prev,
-        esNuevaCategoria: true,
-        categoria: ''
-      }));
-      // No generar código hasta que se escriba la nueva categoría
-      setCodigoGenerado('---');
-    } else {
-      // Seleccionó una categoría existente
-      setFormData(prev => ({
-        ...prev,
-        esNuevaCategoria: false,
-        categoria: value,
-        nuevaCategoria: ''
-      }));
-
-      // Generar nuevo código si no estamos editando
-      if (!producto) {
-        const nuevoCodigo = getCodigoAutomatico(value);
-        setCodigoGenerado(nuevoCodigo);
-      }
-    }
-  };
-
-  const handleNuevaCategoriaChange = (e) => {
-    const { value } = e.target;
-
-    setFormData(prev => ({
+    // Marcar campo como tocado
+    setTouched(prev => ({
       ...prev,
-      nuevaCategoria: value
+      [name]: true
     }));
 
-    // Generar código cuando se escribe la nueva categoría (mínimo 2 caracteres)
-    if (value.length >= 2 && !producto) {
-      const nuevoCodigo = getCodigoAutomatico(value);
-      setCodigoGenerado(nuevoCodigo);
+    // Validar campo
+    validateField(name, value);
+  };
+
+  const validateField = (name, value) => {
+    let error = '';
+
+    if (name === 'nombre') {
+      if (!value.trim()) {
+        error = 'El nombre es requerido';
+      } else if (value.trim().length < 2) {
+        error = 'El nombre debe tener al menos 2 caracteres';
+      }
+    } else if (name === 'descripcion') {
+      if (!value.trim()) {
+        error = 'La descripción es requerida';
+      }
+    } else if (name === 'categoria') {
+      if (!value) {
+        error = 'La categoría es requerida';
+      } else if (categorias.length === 0) {
+        error = 'No hay categorías disponibles. Por favor, crea categorías primero.';
+      }
+    } else if (name === 'precio') {
+      const precioNum = parseFloat(value);
+      if (!value || isNaN(precioNum) || precioNum <= 0) {
+        error = 'El precio debe ser mayor a 0';
+      }
+    } else if (name === 'stock') {
+      const stockNum = parseInt(value);
+      if (!value || isNaN(stockNum) || stockNum < 0) {
+        error = 'El stock no puede ser negativo';
+      }
+    } else if (name === 'stock_critico') {
+      const stockCriticoNum = parseInt(value);
+      if (!value || isNaN(stockCriticoNum) || stockCriticoNum < 0) {
+        error = 'El stock crítico no puede ser negativo';
+      }
     }
 
-    // Limpiar error
-    if (errors.nuevaCategoria) {
-      setErrors(prev => ({
-        ...prev,
-        nuevaCategoria: ''
-      }));
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Validar nombre
+    if (!formData.nombre.trim()) {
+      newErrors.nombre = 'El nombre es requerido';
+    } else if (formData.nombre.trim().length < 2) {
+      newErrors.nombre = 'El nombre debe tener al menos 2 caracteres';
     }
+
+    // Validar descripción
+    if (!formData.descripcion.trim()) {
+      newErrors.descripcion = 'La descripción es requerida';
+    }
+
+    // Validar categoría
+    if (!formData.categoria) {
+      newErrors.categoria = 'La categoría es requerida';
+    } else if (categorias.length === 0) {
+      newErrors.categoria = 'No hay categorías disponibles. Por favor, crea categorías primero.';
+    }
+
+    // Validar precio
+    const precioNum = parseFloat(formData.precio);
+    if (!formData.precio || isNaN(precioNum) || precioNum <= 0) {
+      newErrors.precio = 'El precio debe ser mayor a 0';
+    }
+
+    // Validar stock
+    const stockNum = parseInt(formData.stock);
+    if (!formData.stock || isNaN(stockNum) || stockNum < 0) {
+      newErrors.stock = 'El stock no puede ser negativo';
+    }
+
+    // Validar stock crítico
+    const stockCriticoNum = parseInt(formData.stock_critico);
+    if (!formData.stock_critico || isNaN(stockCriticoNum) || stockCriticoNum < 0) {
+      newErrors.stock_critico = 'El stock crítico no puede ser negativo';
+    }
+
+    // Marcar todos los campos como tocados
+    const allTouched = {
+      nombre: true,
+      descripcion: true,
+      categoria: true,
+      precio: true,
+      stock: true,
+      stock_critico: true
+    };
+    setTouched(allTouched);
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleImagenChange = (e) => {
@@ -136,56 +190,70 @@ const ProductoForm = ({ producto, categorias, getCodigoAutomatico, onSubmit, onC
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
-    if (!formData.descripcion.trim()) newErrors.descripcion = 'La descripción es requerida';
-
-    if (formData.esNuevaCategoria) {
-      if (!formData.nuevaCategoria.trim()) newErrors.nuevaCategoria = 'La nueva categoría es requerida';
-      else if (formData.nuevaCategoria.trim().length < 2) newErrors.nuevaCategoria = 'La categoría debe tener al menos 2 caracteres';
-    } else {
-      if (!formData.categoria) newErrors.categoria = 'La categoría es requerida';
-    }
-
-    if (!formData.precio || formData.precio <= 0) newErrors.precio = 'El precio debe ser mayor a 0';
-    if (!formData.stock || formData.stock < 0) newErrors.stock = 'El stock no puede ser negativo';
-    if (!formData.stock_critico || formData.stock_critico < 0) newErrors.stock_critico = 'El stock crítico no puede ser negativo';
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
 
-    if (!validateForm()) return;
-
-    // Preparar datos para enviar
-    const productoData = {
-      // El código se generará automáticamente en handleCreate
-      nombre: formData.nombre,
-      descripcion: formData.descripcion,
-      categoria: formData.esNuevaCategoria ? formData.nuevaCategoria : formData.categoria,
-      precio: parseInt(formData.precio),
-      stock: parseInt(formData.stock),
-      stock_critico: parseInt(formData.stock_critico),
-      imagen: formData.imagen || imagenPorDefecto
-    };
-
-    // Solo agregar estos campos si estamos creando una nueva categoría
-    if (formData.esNuevaCategoria) {
-      productoData.esNuevaCategoria = true;
-      productoData.nuevaCategoria = formData.nuevaCategoria;
+    if (!validateForm()) {
+      setIsSubmitting(false);
+      return;
     }
 
-    onSubmit(productoData);
+    try {
+      // Preparar datos
+      const productoData = {
+        nombre: formData.nombre,
+        descripcion: formData.descripcion,
+        categoria: formData.categoria,
+        precio: parseFloat(formData.precio),
+        stock: parseInt(formData.stock),
+        stock_critico: parseInt(formData.stock_critico),
+        imagen: formData.imagen || imagenPorDefecto,
+        codigo: codigoGenerado
+      };
+
+      await onSubmit(productoData);
+    } catch (error) {
+      console.error('Error en submit:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({
+      ...prev,
+      [name]: true
+    }));
+    validateField(name, value);
+  };
+
+  // Mostrar mensaje si no hay categorías
+  if (categorias.length === 0) {
+    return (
+      <div className="alert alert-warning">
+        <h5 className="alert-heading">No hay categorías disponibles</h5>
+        <p>Debes crear categorías primero antes de poder agregar productos.</p>
+        <div className="d-flex justify-content-end">
+          <button 
+            type="button" 
+            className="btn btn-secondary" 
+            onClick={onCancel}
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit}>
-      {/* Mostrar código generado (solo lectura) */}
+      {/* Mostrar código generado */}
       <div className="row">
         <div className="col-md-6">
           <div className="mb-3">
@@ -207,60 +275,51 @@ const ProductoForm = ({ producto, categorias, getCodigoAutomatico, onSubmit, onC
               Categoría *
             </label>
             <select
-              className={`form-select ${errors.categoria ? 'is-invalid' : ''}`}
+              className={`form-select ${touched.categoria && errors.categoria ? 'is-invalid' : ''}`}
               id="categoria"
               name="categoria"
-              value={formData.esNuevaCategoria ? '_nueva' : formData.categoria}
-              onChange={handleCategoriaChange}
-              disabled={!!producto} // No permitir cambiar categoría en edición
+              value={formData.categoria}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              disabled={isSubmitting}
             >
               <option value="">Seleccionar categoría...</option>
               {categorias.map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
-              <option value="_nueva">➕ Nueva categoría</option>
             </select>
-            {errors.categoria && <div className="invalid-feedback">{errors.categoria}</div>}
+            {touched.categoria && errors.categoria && (
+              <div className="invalid-feedback">{errors.categoria}</div>
+            )}
+            <div className="form-text">
+              Las categorías deben crearse primero en la sección de Categorías.
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Campo para nueva categoría */}
-      {formData.esNuevaCategoria && (
-        <div className="mb-3">
-          <label htmlFor="nuevaCategoria" className="form-label">
-            Nueva Categoría *
-          </label>
-          <input
-            type="text"
-            className={`form-control ${errors.nuevaCategoria ? 'is-invalid' : ''}`}
-            id="nuevaCategoria"
-            name="nuevaCategoria"
-            value={formData.nuevaCategoria}
-            onChange={handleNuevaCategoriaChange} // ✅ Usar la nueva función
-            placeholder="Ej: Libros, Electrónicos, etc."
-          />
-          {errors.nuevaCategoria && <div className="invalid-feedback">{errors.nuevaCategoria}</div>}
-          <div className="form-text">
-            Esta categoría se guardará para futuros productos.
-          </div>
-        </div>
-      )}
-
+      {/* Resto del formulario... */}
       <div className="mb-3">
         <label htmlFor="nombre" className="form-label">
           Nombre del Producto *
         </label>
         <input
           type="text"
-          className={`form-control ${errors.nombre ? 'is-invalid' : ''}`}
+          className={`form-control ${touched.nombre && errors.nombre ? 'is-invalid' : ''} ${touched.nombre && !errors.nombre ? 'is-valid' : ''}`}
           id="nombre"
           name="nombre"
           value={formData.nombre}
           onChange={handleChange}
+          onBlur={handleBlur}
           placeholder="Ej: Llavero Stardew Valley"
+          disabled={isSubmitting}
         />
-        {errors.nombre && <div className="invalid-feedback">{errors.nombre}</div>}
+        {touched.nombre && errors.nombre && (
+          <div className="invalid-feedback">{errors.nombre}</div>
+        )}
+        {touched.nombre && !errors.nombre && (
+          <div className="valid-feedback">Nombre válido ✓</div>
+        )}
       </div>
 
       <div className="mb-3">
@@ -268,15 +327,22 @@ const ProductoForm = ({ producto, categorias, getCodigoAutomatico, onSubmit, onC
           Descripción *
         </label>
         <textarea
-          className={`form-control ${errors.descripcion ? 'is-invalid' : ''}`}
+          className={`form-control ${touched.descripcion && errors.descripcion ? 'is-invalid' : ''} ${touched.descripcion && !errors.descripcion ? 'is-valid' : ''}`}
           id="descripcion"
           name="descripcion"
           rows="3"
           value={formData.descripcion}
           onChange={handleChange}
+          onBlur={handleBlur}
           placeholder="Descripción detallada del producto..."
+          disabled={isSubmitting}
         />
-        {errors.descripcion && <div className="invalid-feedback">{errors.descripcion}</div>}
+        {touched.descripcion && errors.descripcion && (
+          <div className="invalid-feedback">{errors.descripcion}</div>
+        )}
+        {touched.descripcion && !errors.descripcion && (
+          <div className="valid-feedback">Descripción válida ✓</div>
+        )}
       </div>
 
       <div className="row">
@@ -287,15 +353,22 @@ const ProductoForm = ({ producto, categorias, getCodigoAutomatico, onSubmit, onC
             </label>
             <input
               type="number"
-              className={`form-control ${errors.precio ? 'is-invalid' : ''}`}
+              className={`form-control ${touched.precio && errors.precio ? 'is-invalid' : ''} ${touched.precio && !errors.precio ? 'is-valid' : ''}`}
               id="precio"
               name="precio"
               value={formData.precio}
               onChange={handleChange}
+              onBlur={handleBlur}
               min="0"
               placeholder="5990"
+              disabled={isSubmitting}
             />
-            {errors.precio && <div className="invalid-feedback">{errors.precio}</div>}
+            {touched.precio && errors.precio && (
+              <div className="invalid-feedback">{errors.precio}</div>
+            )}
+            {touched.precio && !errors.precio && (
+              <div className="valid-feedback">Precio válido ✓</div>
+            )}
           </div>
         </div>
 
@@ -306,15 +379,22 @@ const ProductoForm = ({ producto, categorias, getCodigoAutomatico, onSubmit, onC
             </label>
             <input
               type="number"
-              className={`form-control ${errors.stock ? 'is-invalid' : ''}`}
+              className={`form-control ${touched.stock && errors.stock ? 'is-invalid' : ''} ${touched.stock && !errors.stock ? 'is-valid' : ''}`}
               id="stock"
               name="stock"
               value={formData.stock}
               onChange={handleChange}
+              onBlur={handleBlur}
               min="0"
               placeholder="50"
+              disabled={isSubmitting}
             />
-            {errors.stock && <div className="invalid-feedback">{errors.stock}</div>}
+            {touched.stock && errors.stock && (
+              <div className="invalid-feedback">{errors.stock}</div>
+            )}
+            {touched.stock && !errors.stock && (
+              <div className="valid-feedback">Stock válido ✓</div>
+            )}
           </div>
         </div>
 
@@ -325,15 +405,22 @@ const ProductoForm = ({ producto, categorias, getCodigoAutomatico, onSubmit, onC
             </label>
             <input
               type="number"
-              className={`form-control ${errors.stock_critico ? 'is-invalid' : ''}`}
+              className={`form-control ${touched.stock_critico && errors.stock_critico ? 'is-invalid' : ''} ${touched.stock_critico && !errors.stock_critico ? 'is-valid' : ''}`}
               id="stock_critico"
               name="stock_critico"
               value={formData.stock_critico}
               onChange={handleChange}
+              onBlur={handleBlur}
               min="0"
               placeholder="10"
+              disabled={isSubmitting}
             />
-            {errors.stock_critico && <div className="invalid-feedback">{errors.stock_critico}</div>}
+            {touched.stock_critico && errors.stock_critico && (
+              <div className="invalid-feedback">{errors.stock_critico}</div>
+            )}
+            {touched.stock_critico && !errors.stock_critico && (
+              <div className="valid-feedback">Stock crítico válido ✓</div>
+            )}
           </div>
         </div>
       </div>
@@ -366,6 +453,7 @@ const ProductoForm = ({ producto, categorias, getCodigoAutomatico, onSubmit, onC
             id="imagenFile"
             accept="image/*"
             onChange={handleImagenChange}
+            disabled={isSubmitting}
           />
           <span className="input-group-text">o</span>
           <input
@@ -375,7 +463,9 @@ const ProductoForm = ({ producto, categorias, getCodigoAutomatico, onSubmit, onC
             name="imagen"
             value={formData.imagen}
             onChange={handleChange}
+            onBlur={handleBlur}
             placeholder="URL de la imagen o sube un archivo"
+            disabled={isSubmitting}
           />
         </div>
         <div className="form-text">
@@ -383,12 +473,67 @@ const ProductoForm = ({ producto, categorias, getCodigoAutomatico, onSubmit, onC
         </div>
       </div>
 
+      {/* Resumen de validación */}
+      <div className="card mb-3">
+        <div className="card-body">
+          <h6 className="card-title">
+            <i className="bi bi-clipboard-check me-2"></i>
+            Validaciones
+          </h6>
+          <ul className="list-unstyled mb-0">
+            <li>
+              {!errors.nombre ? '✅' : '❌'} 
+              <span className="ms-2">Nombre válido</span>
+            </li>
+            <li>
+              {!errors.descripcion ? '✅' : '❌'} 
+              <span className="ms-2">Descripción válida</span>
+            </li>
+            <li>
+              {!errors.categoria ? '✅' : '❌'} 
+              <span className="ms-2">Categoría válida</span>
+            </li>
+            <li>
+              {!errors.precio ? '✅' : '❌'} 
+              <span className="ms-2">Precio válido</span>
+            </li>
+            <li>
+              {!errors.stock ? '✅' : '❌'} 
+              <span className="ms-2">Stock válido</span>
+            </li>
+            <li>
+              {!errors.stock_critico ? '✅' : '❌'} 
+              <span className="ms-2">Stock crítico válido</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
       <div className="d-flex justify-content-end gap-2">
-        <button type="button" className="btn btn-secondary" onClick={onCancel}>
+        <button 
+          type="button" 
+          className="btn btn-secondary" 
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
           Cancelar
         </button>
-        <button type="submit" className="btn btn-primary">
-          {producto ? 'Actualizar Producto' : 'Crear Producto'}
+        <button 
+          type="submit" 
+          className="btn btn-primary"
+          disabled={Object.keys(errors).some(key => errors[key]) || isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              {producto ? 'Actualizando...' : 'Creando...'}
+            </>
+          ) : (
+            <>
+              <i className={`bi ${producto ? 'bi-check-circle' : 'bi-plus-circle'} me-2`}></i>
+              {producto ? 'Actualizar Producto' : 'Crear Producto'}
+            </>
+          )}
         </button>
       </div>
     </form>

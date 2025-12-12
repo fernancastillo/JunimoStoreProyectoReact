@@ -9,7 +9,9 @@ export const formatearFecha = () => {
   const dia = ahora.getDate().toString().padStart(2, '0');
   const mes = (ahora.getMonth() + 1).toString().padStart(2, '0');
   const año = ahora.getFullYear();
-  return `${dia}-${mes}-${año}`;
+  const horas = ahora.getHours().toString().padStart(2, '0');
+  const minutos = ahora.getMinutes().toString().padStart(2, '0');
+  return `${dia}-${mes}-${año}_${horas}${minutos}`;
 };
 
 /**
@@ -65,10 +67,23 @@ verificarYMigrarDatosOrdenes();
 /**
  * Genera un reporte de productos en formato CSV compatible con Excel
  */
-export const generarReporteCSV = (productos) => {
+export const generarReporteCSV = (data, tipo = 'productos') => {
   // Agregar BOM para UTF-8 (importante para Excel)
   const BOM = '\uFEFF';
 
+  if (tipo === 'categorias') {
+    // Headers para categorías
+    const headers = ['ID', 'Nombre'];
+    
+    const rows = data.map(categoria => [
+      categoria.id || '',
+      `"${(categoria.nombre || '').replace(/"/g, '""')}"`
+    ]);
+    
+    return BOM + [headers, ...rows].map(row => row.join(',')).join('\n');
+  }
+
+  // Código original para productos
   const headers = [
     'Código',
     'Nombre',
@@ -80,7 +95,7 @@ export const generarReporteCSV = (productos) => {
     'Estado Stock'
   ].join(',');
 
-  const rows = productos.map(producto => {
+  const rows = data.map(producto => {
     const estadoStock = producto.stock === 0
       ? 'SIN STOCK'
       : producto.stock <= producto.stock_critico
@@ -111,9 +126,25 @@ export const generarReporteCSV = (productos) => {
  * Genera un reporte de productos en formato CSV alternativo (separado por punto y coma)
  * Esto funciona mejor en algunas versiones de Excel
  */
-export const generarReporteCSVExcel = (productos) => {
+export const generarReporteCSVExcel = (data, tipo = 'productos') => {
   const BOM = '\uFEFF';
 
+  if (tipo === 'categorias') {
+    const headers = ['ID', 'Nombre'];
+    
+    const rows = data.map(categoria => [
+      categoria.id || '',
+      categoria.nombre || ''
+    ]);
+    
+    const csvContent = BOM + [headers, ...rows]
+      .map(row => row.join(';'))
+      .join('\n');
+    
+    return csvContent;
+  }
+
+  // Código original para productos
   const headers = [
     'Código',
     'Nombre',
@@ -125,7 +156,7 @@ export const generarReporteCSVExcel = (productos) => {
     'Estado Stock'
   ].join(';'); // Usar punto y coma como separador
 
-  const rows = productos.map(producto => {
+  const rows = data.map(producto => {
     const estadoStock = producto.stock === 0
       ? 'SIN STOCK'
       : producto.stock <= producto.stock_critico
@@ -150,11 +181,23 @@ export const generarReporteCSVExcel = (productos) => {
 /**
  * Genera un reporte de productos en formato JSON
  */
-export const generarReporteJSON = (productos) => {
+export const generarReporteJSON = (data, tipo = 'productos') => {
+  if (tipo === 'categorias') {
+    const reporte = {
+      tipo: 'categorias',
+      fechaGeneracion: new Date().toISOString(),
+      totalCategorias: data.length,
+      categorias: data
+    };
+
+    return JSON.stringify(reporte, null, 2);
+  }
+
+  // Código original para productos
   const reporte = {
     fechaGeneracion: new Date().toISOString(),
-    totalProductos: productos.length,
-    productos: productos.map(producto => ({
+    totalProductos: data.length,
+    productos: data.map(producto => ({
       ...producto,
       estadoStock: producto.stock === 0
         ? 'SIN STOCK'
@@ -192,17 +235,55 @@ export const descargarArchivo = (contenido, nombreArchivo, tipoMIME) => {
 /**
  * Genera estadísticas para el reporte de productos
  */
-export const generarEstadisticas = (productos) => {
-  const totalProductos = productos.length;
-  const sinStock = productos.filter(p => p.stock === 0).length;
-  const stockCritico = productos.filter(p => p.stock > 0 && p.stock <= p.stock_critico).length;
-  const stockNormal = productos.filter(p => p.stock > p.stock_critico).length;
+export const generarEstadisticas = (data, tipo = 'productos') => {
+  if (!Array.isArray(data)) {
+    if (tipo === 'categorias') {
+      return {
+        total: 0,
+        categoriaMasAntigua: null,
+        categoriaMasReciente: null
+      };
+    }
+    
+    return {
+      totalProductos: 0,
+      sinStock: 0,
+      stockCritico: 0,
+      stockNormal: 0,
+      categorias: 0
+    };
+  }
+
+  if (tipo === 'categorias') {
+    const total = data.length;
+    
+    // Encontrar categoría más antigua (menor ID)
+    const categoriaMasAntigua = data.length > 0 
+      ? data.reduce((min, cat) => cat.id < min.id ? cat : min, data[0]).nombre 
+      : null;
+    
+    // Encontrar categoría más reciente (mayor ID)
+    const categoriaMasReciente = data.length > 0 
+      ? data.reduce((max, cat) => cat.id > max.id ? cat : max, data[0]).nombre 
+      : null;
+    
+    return {
+      total,
+      categoriaMasAntigua,
+      categoriaMasReciente,
+      nombresCategorias: data.map(cat => cat.nombre)
+    };
+  }
+
+  // Código original para productos
+  const totalProductos = data.length;
+  const sinStock = data.filter(p => p.stock === 0).length;
+  const stockCritico = data.filter(p => p.stock > 0 && p.stock <= p.stock_critico).length;
+  const stockNormal = data.filter(p => p.stock > p.stock_critico).length;
 
   // Calcular número de categorías únicas
-  const categoriasUnicas = new Set(productos.map(p => p.categoria));
+  const categoriasUnicas = new Set(data.map(p => p.categoria));
   const numeroCategorias = categoriasUnicas.size;
-
-  // NO calcular valorTotalInventario ya que no se necesita
 
   return {
     totalProductos,
@@ -212,6 +293,70 @@ export const generarEstadisticas = (productos) => {
     categorias: numeroCategorias // Agregar el número de categorías
     // Eliminar valorTotalInventario ya que no se necesita
   };
+};
+
+// ====================================================================
+// FUNCIONES ESPECÍFICAS PARA CATEGORÍAS
+// ====================================================================
+
+/**
+ * Genera reporte de categorías en formato CSV o JSON
+ */
+export const generarReporteCategorias = (categorias, formato = 'csv') => {
+  const fecha = formatearFecha();
+  
+  try {
+    let contenido, nombreArchivo, tipoMIME;
+
+    if (formato === 'csv') {
+      contenido = generarReporteCSV(categorias, 'categorias');
+      nombreArchivo = `reporte_categorias_${fecha}.csv`;
+      tipoMIME = 'text/csv;charset=utf-8;';
+    } else if (formato === 'csv-excel') {
+      contenido = generarReporteCSVExcel(categorias, 'categorias');
+      nombreArchivo = `reporte_categorias_${fecha}.csv`;
+      tipoMIME = 'text/csv;charset=utf-8;';
+    } else {
+      contenido = generarReporteJSON(categorias, 'categorias');
+      nombreArchivo = `reporte_categorias_${fecha}.json`;
+      tipoMIME = 'application/json;charset=utf-8;';
+    }
+
+    descargarArchivo(contenido, nombreArchivo, tipoMIME);
+
+    // Retornar estadísticas para mostrar en modal si es necesario
+    return generarEstadisticas(categorias, 'categorias');
+
+  } catch (error) {
+    console.error('Error al generar reporte de categorías:', error);
+    throw new Error('Error al generar el reporte. Por favor, intenta nuevamente.');
+  }
+};
+
+/**
+ * Función específica para manejar reporte de categorías desde la página de gestión
+ */
+export const manejarReporteCategorias = (categoriasFiltradas, formato) => {
+  const estadisticas = generarEstadisticas(categoriasFiltradas, 'categorias');
+  
+  if (formato === 'json') {
+    const confirmar = window.confirm(`
+ESTADÍSTICAS DEL REPORTE DE CATEGORÍAS:
+
+• Total de categorías: ${estadisticas.total}
+• Categoría más antigua (menor ID): ${estadisticas.categoriaMasAntigua || 'N/A'}
+• Categoría más reciente (mayor ID): ${estadisticas.categoriaMasReciente || 'N/A'}
+
+¿Deseas descargar el reporte en formato JSON?
+    `.trim());
+
+    if (confirmar) {
+      generarReporteCategorias(categoriasFiltradas, 'json');
+    }
+  } else {
+    // Para CSV mostrar modal o ejecutar directamente
+    generarReporteCategorias(categoriasFiltradas, formato);
+  }
 };
 
 // ====================================================================
@@ -526,4 +671,115 @@ export const generarReporteOrdenesLegacy = (ordenes, formato, estadisticas) => {
 export const generarReporteUsuariosLegacy = (usuarios, formato, estadisticas) => {
   console.warn('generarReporteUsuariosLegacy está deprecado. Usar generarReporteUsuarios(formato, usuariosParam, estadisticasParam) en su lugar.');
   generarReporteUsuarios(formato, usuarios, estadisticas);
+};
+
+// ====================================================================
+// FUNCIONES DE VALIDACIÓN Y UTILIDAD GENERAL
+// ====================================================================
+
+/**
+ * Valida si los datos son adecuados para generar reporte
+ */
+export const validarDatosReporte = (data, tipo = 'productos') => {
+  if (!Array.isArray(data)) {
+    return { valido: false, mensaje: 'Los datos no son un array válido' };
+  }
+  
+  if (data.length === 0) {
+    return { valido: false, mensaje: 'No hay datos para generar el reporte' };
+  }
+  
+  if (tipo === 'categorias') {
+    const datosInvalidos = data.filter(cat => 
+      !cat.id || !cat.nombre || typeof cat.nombre !== 'string'
+    );
+    
+    if (datosInvalidos.length > 0) {
+      return { 
+        valido: false, 
+        mensaje: `Hay ${datosInvalidos.length} categorías con datos inválidos` 
+      };
+    }
+  } else if (tipo === 'productos') {
+    const datosInvalidos = data.filter(prod => 
+      !prod.codigo || !prod.nombre || prod.precio === undefined
+    );
+    
+    if (datosInvalidos.length > 0) {
+      return { 
+        valido: false, 
+        mensaje: `Hay ${datosInvalidos.length} productos con datos inválidos` 
+      };
+    }
+  }
+  
+  return { valido: true, mensaje: 'Datos válidos para reporte' };
+};
+
+/**
+ * Calcula métricas adicionales para el dashboard
+ */
+export const calcularMetricas = (data, tipo = 'productos') => {
+  if (!Array.isArray(data)) return {};
+  
+  if (tipo === 'categorias') {
+    return {
+      total: data.length,
+      conProductos: 0, // Esto requeriría consultar productos por categoría
+      sinProductos: data.length
+    };
+  }
+  
+  // Métricas para productos
+  const productosCriticos = data.filter(p => 
+    p.stock > 0 && p.stock <= p.stock_critico
+  );
+  
+  const productosSinStock = data.filter(p => p.stock === 0);
+  
+  const valorInventario = data.reduce((sum, p) => 
+    sum + ((p.precio || 0) * (p.stock || 0)), 0
+  );
+  
+  return {
+    productosCriticos: productosCriticos.length,
+    productosSinStock: productosSinStock.length,
+    valorInventario
+  };
+};
+
+/**
+ * Formatea un número como moneda chilena
+ */
+export const formatoMoneda = (valor) => {
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP'
+  }).format(valor);
+};
+
+/**
+ * Genera un resumen ejecutivo para mostrar en modales
+ */
+export const generarResumen = (data, tipo = 'productos') => {
+  const estadisticas = generarEstadisticas(data, tipo);
+  
+  if (tipo === 'categorias') {
+    return {
+      titulo: 'Resumen de Categorías',
+      total: estadisticas.total,
+      masAntigua: estadisticas.categoriaMasAntigua,
+      masReciente: estadisticas.categoriaMasReciente
+    };
+  } else if (tipo === 'productos') {
+    return {
+      titulo: 'Resumen de Productos',
+      totalProductos: estadisticas.totalProductos,
+      productosCriticos: estadisticas.stockCritico,
+      productosSinStock: estadisticas.sinStock,
+      categoriasUnicas: estadisticas.categorias
+    };
+  }
+  
+  return {};
 };

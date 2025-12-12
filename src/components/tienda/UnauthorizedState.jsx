@@ -1,7 +1,11 @@
 import React from 'react';
 import { Container, Button } from 'react-bootstrap';
+import { authService } from '../../utils/tienda/authService'; // Añadir esta importación
 
 const UnauthorizedState = ({ navigate }) => {
+  // Opcional: Puedes añadir información de sesión si está por expirar
+  const timeRemaining = authService.getTimeRemaining();
+  
   return (
     <div
       className="min-vh-100 w-100"
@@ -18,6 +22,17 @@ const UnauthorizedState = ({ navigate }) => {
         <div className="display-1 mb-3">🔒</div>
         <h4 className="text-white">No has iniciado sesión</h4>
         <p className="text-white">Por favor inicia sesión para acceder a tu perfil</p>
+        
+        {/* Opcional: Mostrar advertencia si la sesión está por expirar */}
+        {timeRemaining > 0 && timeRemaining <= 5 && (
+          <div className="alert alert-warning mx-auto" style={{ maxWidth: '500px' }}>
+            <small>
+              <i className="bi bi-exclamation-triangle me-2"></i>
+              Tu sesión expirará en {timeRemaining} minutos
+            </small>
+          </div>
+        )}
+        
         <Button
           variant="warning"
           onClick={() => navigate('/login')}

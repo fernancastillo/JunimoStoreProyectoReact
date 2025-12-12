@@ -1,126 +1,111 @@
-import { saveLocalstorage, loadFromLocalstorage, deleteFromLocalstorage } from '../localstorageHelper';
 import { dataService } from '../dataService';
-
-const AUTH_KEY = 'auth_user';
-const USER_TYPE_KEY = 'user_type';
+import { jwtService } from '../jwtService';
 
 export const authService = {
-  // Autenticar usuario desde la base de datos Oracle Cloud
+  // Autenticar usuario
   login: async (email, password) => {
     try {
-      // Buscar en la base de datos Oracle Cloud
+      // Buscar usuario en la base de datos
+      let usuarioDesdeBD;
       try {
-        // Opción 1: Usar el endpoint específico por correo
-        let usuarioDesdeBD;
-        try {
-          usuarioDesdeBD = await dataService.getUsuarioByCorreo(email);
-        } catch (endpointError) {
-          // Opción 2: Obtener todos los usuarios y filtrar
-          const todosUsuarios = await dataService.getUsuarios();
+        usuarioDesdeBD = await dataService.getUsuarioByCorreo(email);
+      } catch (endpointError) {
+        // Fallback: obtener todos y filtrar
+        const todosUsuarios = await dataService.getUsuarios();
+        usuarioDesdeBD = todosUsuarios.find(user => {
+          const emailMatch = user.correo && user.correo.toLowerCase() === email.toLowerCase();
+          return emailMatch;
+        });
+      }
 
-          usuarioDesdeBD = todosUsuarios.find(user => {
-            const emailMatch = user.correo && user.correo.toLowerCase() === email.toLowerCase();
-            return emailMatch;
-          });
-        }
+      if (usuarioDesdeBD) {
+        // Verificar contraseña
+        const passwordHash = await authService.hashPasswordSHA256(password);
 
-        if (usuarioDesdeBD) {
-          // Verificar contraseña (comparar hash SHA256)
-          const passwordHash = await authService.hashPasswordSHA256(password);
+        if (usuarioDesdeBD.contrasenha === passwordHash) {
+          // Normalizar tipo de usuario
+          const tipoUsuario = authService.normalizeUserType(usuarioDesdeBD.tipo);
 
-          if (usuarioDesdeBD.contrasenha === passwordHash) {
-            // Normalizar el tipo de usuario
-            const tipoUsuario = authService.normalizeUserType(usuarioDesdeBD.tipo);
+          // Datos del usuario
+          const userData = {
+            id: usuarioDesdeBD.run || usuarioDesdeBD.id,
+            nombre: usuarioDesdeBD.nombre || '',
+            apellido: usuarioDesdeBD.apellidos || usuarioDesdeBD.apellido || '',
+            email: usuarioDesdeBD.correo,
+            type: tipoUsuario,
+            loginTime: new Date().toISOString(),
+            run: usuarioDesdeBD.run,
+            direccion: usuarioDesdeBD.direccion,
+            comuna: usuarioDesdeBD.comuna,
+            region: usuarioDesdeBD.region,
+            telefono: usuarioDesdeBD.telefono,
+            fechaNac: usuarioDesdeBD.fechaNac,
+            source: 'oracle_cloud'
+          };
+          
+          const token = jwtService.generateSimulatedToken(userData, tipoUsuario);
+          
+          // Guardar token
+          jwtService.saveToken(token, userData);
 
-            // Determinar la redirección según el tipo de usuario
-            let redirectTo = '/index';
-            if (tipoUsuario === 'Administrador') {
-              redirectTo = '/admin/dashboard';
-            } else if (tipoUsuario === 'Vendedor') {
-              redirectTo = '/vendedor';
-            }
-
-            const userData = {
-              id: usuarioDesdeBD.run || usuarioDesdeBD.id,
-              nombre: usuarioDesdeBD.nombre || '',
-              apellido: usuarioDesdeBD.apellidos || usuarioDesdeBD.apellido || '',
-              email: usuarioDesdeBD.correo,
-              type: tipoUsuario,
-              loginTime: new Date().toISOString(),
-              run: usuarioDesdeBD.run,
-              direccion: usuarioDesdeBD.direccion,
-              comuna: usuarioDesdeBD.comuna,
-              region: usuarioDesdeBD.region,
-              telefono: usuarioDesdeBD.telefono,
-              fechaNac: usuarioDesdeBD.fechaNac,
-              source: 'oracle_cloud'
-            };
-
-            // Guardar en sesión
-            authService.saveUserSession(userData, tipoUsuario);
-
-            return {
-              success: true,
-              user: userData,
-              redirectTo: redirectTo
-            };
-          } else {
-            return {
-              success: false,
-              error: 'Contraseña incorrecta'
-            };
+          // Determinar redirección
+          let redirectTo = '/index';
+          if (tipoUsuario === 'Administrador') {
+            redirectTo = '/admin/dashboard';
+          } else if (tipoUsuario === 'Vendedor') {
+            redirectTo = '/vendedor';
           }
+
+          return {
+            success: true,
+            user: userData,
+            token: token,
+            redirectTo: redirectTo
+          };
         } else {
           return {
             success: false,
-            error: 'Usuario no encontrado en el sistema'
+            error: 'Contraseña incorrecta'
           };
         }
-
-      } catch (bdError) {
+      } else {
         return {
           success: false,
-          error: 'Error de conexión con la base de datos. Intente más tarde.'
+          error: 'Usuario no encontrado en el sistema'
         };
       }
 
-    } catch (error) {
+    } catch (bdError) {
+      console.error('Error de autenticación:', bdError);
       return {
         success: false,
-        error: 'Error del servidor. Por favor, intente nuevamente.'
+        error: 'Error de conexión con la base de datos. Intente más tarde.'
       };
     }
   },
 
-  // Función para hashear contraseña con SHA256 (igual que Oracle)
+  // Hashear contraseña con SHA256
   hashPasswordSHA256: async (password) => {
     try {
-      // Convertir el string a un ArrayBuffer
       const encoder = new TextEncoder();
       const data = encoder.encode(password);
-
-      // Hashear con SHA-256
       const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-
-      // Convertir el ArrayBuffer a string hexadecimal
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
       return hashHex.toUpperCase();
     } catch (error) {
-      // Fallback: si crypto.subtle no está disponible
+      // Fallback simple
       return authService.simpleSHA256(password);
     }
   },
 
-  // Fallback para navegadores que no soportan crypto.subtle
+  // Fallback para navegadores antiguos
   simpleSHA256: (password) => {
-    // Esta es una implementación básica - crypto.subtle es preferible
     let hash = 0;
     for (let i = 0; i < password.length; i++) {
       const char = password.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convertir a 32-bit integer
+      hash = hash & hash;
     }
     return Math.abs(hash).toString(16).toUpperCase();
   },
@@ -131,62 +116,50 @@ export const authService = {
 
     const tipoLower = tipo.toLowerCase().trim();
 
-    if (tipoLower === 'admin' || tipoLower === 'administrador') return 'Administrador';
-    if (tipoLower === 'cliente' || tipoLower === 'client') return 'Cliente';
-    if (tipoLower === 'vendedor') return 'Vendedor';
+    if (tipoLower.includes('admin')) return 'Administrador';
+    if (tipoLower.includes('cliente') || tipoLower.includes('client')) return 'Cliente';
+    if (tipoLower.includes('vendedor')) return 'Vendedor';
 
-    return tipo;
+    return 'Cliente';
   },
 
-  // Guardar sesión de usuario
-  saveUserSession: (userData, userType) => {
-    saveLocalstorage(AUTH_KEY, userData);
-    saveLocalstorage(USER_TYPE_KEY, userType);
-
-    // Disparar evento para notificar cambios de autenticación
-    window.dispatchEvent(new Event('authStateChanged'));
-  },
-
+  // Cerrar sesión
   logout: () => {
-    deleteFromLocalstorage(AUTH_KEY);
-    deleteFromLocalstorage(USER_TYPE_KEY);
-
-    window.dispatchEvent(new Event('authStateChanged'));
-
-    // Redirigir al inicio
-    window.location.href = '/index';
+    jwtService.clearToken();
+    window.location.href = '/login?logout=success';
   },
 
+  // Verificar autenticación
   isAuthenticated: () => {
-    const user = loadFromLocalstorage(AUTH_KEY);
-    return user !== null && user !== undefined;
+    return jwtService.isAuthenticated();
   },
 
+  // Obtener usuario actual
   getCurrentUser: () => {
-    return loadFromLocalstorage(AUTH_KEY);
+    return jwtService.getUserFromToken();
   },
 
+  // Obtener tipo de usuario
   getUserType: () => {
-    return loadFromLocalstorage(USER_TYPE_KEY);
+    return jwtService.getUserRole();
   },
 
+  // Verificar roles
   isAdmin: () => {
-    const userType = authService.getUserType();
-    return userType === 'Administrador';
+    return authService.getUserType() === 'Administrador';
   },
 
   isVendedor: () => {
-    const userType = authService.getUserType();
-    return userType === 'Vendedor';
+    return authService.getUserType() === 'Vendedor';
   },
 
   isClient: () => {
-    const userType = authService.getUserType();
-    return userType === 'Cliente';
+    return authService.getUserType() === 'Cliente';
   },
 
-  // Obtener ruta de redirección según tipo de usuario
-  getRedirectPath: (userType) => {
+  // Obtener ruta de redirección
+  getRedirectPath: () => {
+    const userType = authService.getUserType();
     switch (userType) {
       case 'Administrador':
         return '/admin/dashboard';
@@ -197,13 +170,13 @@ export const authService = {
     }
   },
 
-  // Verificar si un email existe en la BD
+  // Verificar si email existe
   emailExiste: async (email) => {
     try {
+      const usuarioBD = await dataService.getUsuarioByCorreo(email);
+      return !!usuarioBD;
+    } catch (error) {
       try {
-        const usuarioBD = await dataService.getUsuarioByCorreo(email);
-        return !!usuarioBD;
-      } catch (endpointError) {
         const todosUsuarios = await dataService.getUsuarios();
         const emailExiste = todosUsuarios.some(user => {
           const correoUsuario = user.correo ? user.correo.toLowerCase().trim() : '';
@@ -211,13 +184,13 @@ export const authService = {
           return correoUsuario === emailBuscado;
         });
         return emailExiste;
+      } catch (secondError) {
+        return false;
       }
-    } catch (error) {
-      return false;
     }
   },
 
-  // Verificar estado de la conexión con BD
+  // Verificar conexión con BD
   checkDatabaseConnection: async () => {
     try {
       const usuarios = await dataService.getUsuarios();
@@ -235,7 +208,18 @@ export const authService = {
     }
   },
 
+  // Obtener tiempo restante de sesión
+  getTimeRemaining: () => {
+    return jwtService.getTimeRemaining();
+  },
+
+  // Verificar token periódicamente
+  checkAuth: () => {
+    return jwtService.checkTokenValidity();
+  },
+
+  // Notificar cambios de autenticación
   notifyAuthChange: () => {
     window.dispatchEvent(new Event('authStateChanged'));
-  }
+  },
 };

@@ -21,6 +21,7 @@ import PerfilUsuario from './pages/tienda/PerfilUsuario'
 import UserProtectedRoute from './components/UserProtectedRoute'
 import Productos from './pages/admin/Productos'
 import Categorias from './pages/tienda/Categorias'
+import CategoriasAdmin from './pages/admin/Categorias'  
 import IndexVendedor from './pages/vendedor/IndexVendedor'
 import VendedorProtectedRoute from './components/vendedor/VendedorProtectedRoute'
 import VendedorLayout from './components/vendedor/VendedorLayout'
@@ -48,10 +49,12 @@ function App() {
                   <div className="container-fluid mt-4">
                     <Routes>
                       <Route path='/dashboard' element={<Dashboard />} />
-                      <Route path='/ordenes' element={<OrdenesAdmin />} />  {/* ← Admin */}
+                      <Route path='/ordenes' element={<OrdenesAdmin />} />
                       <Route path='/usuarios' element={<Usuarios />} />
                       <Route path='/perfil' element={<Perfil />} />
                       <Route path='/productos' element={<Productos />} />
+                      <Route path='/categorias' element={<CategoriasAdmin />} />
+                      
                       <Route path='/' element={<Navigate to="/admin/dashboard" replace />} />
                       <Route path='*' element={<Navigate to="/admin/dashboard" replace />} />
                     </Routes>
@@ -62,7 +65,7 @@ function App() {
           </AdminProtectedRoute>
         } />
 
-        {/* RUTAS DE VENDEDOR*/}
+        {/* RUTAS DE VENDEDOR */}
         <Route path="/vendedor/*" element={
           <VendedorProtectedRoute>
             <VendedorLayout>
@@ -90,7 +93,7 @@ function App() {
                 <Route path='/blogs' element={<Blogs />} />
                 <Route path='/nosotros' element={<Nosotros />} />
                 <Route path='/contacto' element={<Contacto />} />
-                <Route path='/categorias' element={<Categorias />} />
+                <Route path='/categorias' element={<Categorias />} /> 
                 <Route path='/ofertas' element={<Ofertas />} />
                 <Route path='/login' element={<Login />} />
                 <Route path='/registro' element={<RegistroUsuario />} />

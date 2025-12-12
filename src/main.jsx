@@ -9,7 +9,6 @@ import { dataService } from './utils/dataService'
 // Función async para inicializar datos antes de renderizar
 const initializeApp = async () => {
   try {
-    
     // Inicializar datos
     const success = dataService.initializeData();
     
@@ -18,20 +17,20 @@ const initializeApp = async () => {
     }
     
     // Verificar que los datos se cargaron correctamente
-    const productos = dataService.getProductos();
-    const usuarios = dataService.getUsuarios();
-    const ordenes = dataService.getOrdenes();
+    const productos = await dataService.getProductos();
+    const usuarios = await dataService.getUsuarios();
+    const ordenes = await dataService.getOrdenes();
     
     if (productos.length === 0) {
-      console.warn('⚠️ No se cargaron productos, forzando reset...');
-      dataService.resetData();
+      console.warn('⚠️ No se cargaron productos');
     }
+    
     return true;
   } catch (error) {
+    console.error('Error inicializando aplicación:', error);
     
-    // Último intento con reset completo
+    // Último intento
     try {
-      dataService.resetData();
       return true;
     } catch (resetError) {
       console.error('💥 Error incluso en reset de emergencia:', resetError);

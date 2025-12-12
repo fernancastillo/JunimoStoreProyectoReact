@@ -35,10 +35,6 @@ export const usePerfil = () => {
           const fechaBD = usuarioCompleto.fechaNac || usuarioCompleto.fecha_nacimiento;
           const fechaParaFormulario = convertOracleDateToForm(fechaBD);
 
-          console.log('=== CARGANDO PERFIL ===');
-          debugDate(fechaBD, 'Fecha desde BD');
-          console.log('Fecha para formulario:', fechaParaFormulario);
-
           setFormData({
             nombre: usuarioCompleto.nombre || '',
             apellidos: usuarioCompleto.apellidos || '',
@@ -108,10 +104,6 @@ export const usePerfil = () => {
       // USAR LA NUEVA FUNCIÓN ESPECÍFICA PARA ORACLE
       const fechaParaBackend = convertFormDateToOracle(formData.fecha_nacimiento);
 
-      console.log('=== GUARDANDO PERFIL ===');
-      console.log('Fecha desde formulario:', formData.fecha_nacimiento);
-      console.log('Fecha procesada para backend:', fechaParaBackend);
-
       const datosActualizados = {
         run: usuario.run,
         nombre: formData.nombre.trim(),
@@ -128,7 +120,6 @@ export const usePerfil = () => {
           : usuario.contrasenha
       };
 
-      console.log('Datos completos a enviar:', datosActualizados);
 
       await dataService.updateUsuario(datosActualizados);
 
@@ -173,14 +164,12 @@ export const usePerfil = () => {
 
       // Obtener todos los usuarios para verificar si hay otros administradores
       const usuarios = await dataService.getUsuarios();
-      console.log('Todos los usuarios obtenidos:', usuarios);
 
       // Verificar si el usuario actual es administrador
       const esAdministrador = usuario.tipo &&
         (usuario.tipo.toLowerCase() === 'administrador' ||
           usuario.tipo.toLowerCase() === 'admin');
 
-      console.log('Es administrador?:', esAdministrador);
 
       if (esAdministrador) {
         // Contar administradores excluyendo al usuario actual
@@ -190,7 +179,6 @@ export const usePerfil = () => {
           u.run !== usuario.run
         );
 
-        console.log('Otros administradores encontrados:', otrosAdmins);
 
         // Si no hay otros administradores, bloquear eliminación
         if (otrosAdmins.length === 0) {

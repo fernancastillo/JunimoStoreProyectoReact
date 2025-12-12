@@ -9,6 +9,7 @@ const AdminSidebar = () => {
     { path: '/admin/dashboard', icon: 'bi bi-speedometer2', label: 'Dashboard' },
     { path: '/admin/ordenes', icon: 'bi bi-cart-check', label: 'Órdenes' },
     { path: '/admin/productos', icon: 'bi bi-box-seam', label: 'Productos' },
+    { path: '/admin/categorias', icon: 'bi bi-tags', label: 'Categorías' }, // ← NUEVO
     { path: '/admin/usuarios', icon: 'bi bi-people', label: 'Usuarios' },
     { path: '/admin/perfil', icon: 'bi bi-person', label: 'Perfil' },
   ];
@@ -94,6 +95,7 @@ export const AdminMobileNavbar = () => {
     { path: '/admin/dashboard', icon: 'bi bi-speedometer2', label: 'Dashboard' },
     { path: '/admin/ordenes', icon: 'bi bi-cart-check', label: 'Órdenes' },
     { path: '/admin/productos', icon: 'bi bi-box-seam', label: 'Productos' },
+    { path: '/admin/categorias', icon: 'bi bi-tags', label: 'Categorías' }, // ← NUEVO
     { path: '/admin/usuarios', icon: 'bi bi-people', label: 'Usuarios' },
     { path: '/admin/perfil', icon: 'bi bi-person', label: 'Perfil' },
   ];
